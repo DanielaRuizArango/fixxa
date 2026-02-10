@@ -46,4 +46,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the service cases created by the user (as a client).
+     */
+    public function serviceCases(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ServiceCase::class, 'client_id');
+    }
+
+    /**
+     * Get the responses provided by the user (as a technician).
+     */
+    public function providedResponses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CaseResponse::class, 'technician_id');
+    }
 }

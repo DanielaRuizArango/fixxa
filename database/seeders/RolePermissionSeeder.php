@@ -21,38 +21,42 @@ class RolePermissionSeeder extends Seeder
             'create users',
             'edit users',
             'delete users',
-            'view posts',
-            'create posts',
-            'edit posts',
-            'delete posts',
+            'view cases',
+            'create cases',
+            'edit cases',
+            'delete cases',
+            'respond cases',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::findOrCreate($permission);
         }
 
         // Crear roles
-        $adminRole = Role::create(['name' => 'admin']);
-        $editorRole = Role::create(['name' => 'editor']);
-        $userRole = Role::create(['name' => 'user']);
+        $adminRole = Role::findOrCreate('admin');
+        $clientRole = Role::findOrCreate('client');
+        $technicianRole = Role::findOrCreate('technician');
 
         // Asignar permisos a roles
         $adminRole->givePermissionTo(Permission::all());
         
-        $editorRole->givePermissionTo([
-            'view posts',
-            'create posts',
-            'edit posts',
-            'delete posts',
+        $clientRole->givePermissionTo([
+            'view cases',
+            'create cases',
+            'edit cases',
+            'delete cases',
         ]);
 
-        $userRole->givePermissionTo([
-            'view posts',
+        $technicianRole->givePermissionTo([
+            'view cases',
+            'respond cases',
         ]);
 
         // Asignar rol admin al primer usuario (si existe)
         $firstUser = User::first();
         if ($firstUser) {
+            // Limpiar roles previos para evitar duplicados si se vuelve a correr
+            $firstUser->roles()->detach();
             $firstUser->assignRole('admin');
         }
     }
