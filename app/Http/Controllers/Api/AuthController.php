@@ -25,7 +25,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -44,7 +44,7 @@ class AuthController extends Controller
                 'user' => $user,
                 'access_token' => $token,
                 'token_type' => 'Bearer',
-            ]
+            ],
         ], 201);
     }
 
@@ -62,16 +62,16 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid login details'
+                'message' => 'Invalid login details',
             ], 401);
         }
 
@@ -84,7 +84,7 @@ class AuthController extends Controller
                 'user' => $user,
                 'access_token' => $token,
                 'token_type' => 'Bearer',
-            ]
+            ],
         ]);
     }
 
@@ -97,7 +97,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'User logged out successfully'
+            'message' => 'User logged out successfully',
         ]);
     }
 }
