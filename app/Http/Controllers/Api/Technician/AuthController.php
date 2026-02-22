@@ -19,7 +19,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name'        => 'required|string|max:255',
-            'cedula'      => 'required|string|max:20|unique:users,cedula',
+            'cedula'      => 'required|string|max:20|unique:technicians,cedula',
             'email'       => 'required|string|email|max:255|unique:users',
             'address'     => 'required|string|max:255',
             'experience'  => 'required|string|max:1000',
@@ -59,14 +59,19 @@ class AuthController extends Controller
 
         $user = User::create([
             'name'       => $request->name,
-            'cedula'     => $request->cedula,
             'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'role'       => 'technician',
+        ]);
+
+        // Crear perfil de técnico
+        $technician = \App\Models\Technician::create([
+            'user_id'    => $user->id,
+            'cedula'     => $request->cedula,
             'address'    => $request->address,
             'experience' => $request->experience,
             'title'      => $request->title,
             'image'      => $imagePath,
-            'password'   => Hash::make($request->password),
-            'role'       => 'technician',
         ]);
 
         $token = $user->createToken('technician_token')->plainTextToken;
@@ -75,7 +80,7 @@ class AuthController extends Controller
             'status'  => 'success',
             'message' => 'Técnico registrado exitosamente.',
             'data'    => [
-                'user'         => $user,
+                'user'         => $user->load('technician'),
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
             ],
@@ -121,7 +126,7 @@ class AuthController extends Controller
             'status'  => 'success',
             'message' => 'Inicio de sesión exitoso.',
             'data'    => [
-                'user'         => $user,
+                'user'         => $user->load('technician'),
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
             ],

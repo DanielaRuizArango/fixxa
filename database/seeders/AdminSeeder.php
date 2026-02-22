@@ -18,9 +18,6 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@fixxa.com'],
             [
                 'name'     => 'Administrador Fixxa',
-                'phone'    => '300-000-0000',
-                'address'  => 'Sede Principal, Bogotá',
-                'cedula'   => '9999999999',
                 'password' => Hash::make('password'),
                 'role'     => 'admin',
             ]
@@ -28,5 +25,10 @@ class AdminSeeder extends Seeder
 
         // Sincronizar rol Spatie (evita duplicados si se corre de nuevo)
         $admin->syncRoles(['admin']);
+
+        // Create admin profile if it doesn't exist
+        \App\Models\Admin::firstOrCreate(
+            ['user_id' => $admin->id]
+        );
     }
 }

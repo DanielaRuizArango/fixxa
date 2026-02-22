@@ -22,7 +22,7 @@ class AuthController extends Controller
             'email'     => 'required|string|email|max:255|unique:users',
             'phone'     => 'required|string|max:20',
             'address'   => 'required|string|max:255',
-            'cedula'    => 'required|string|max:20|unique:users,cedula',
+            'cedula'    => 'required|string|max:20|unique:clients,cedula',
             'password'  => 'required|string|min:8|confirmed',
             'image'     => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
@@ -58,12 +58,17 @@ class AuthController extends Controller
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'phone'    => $request->phone,
-            'address'  => $request->address,
-            'cedula'   => $request->cedula,
-            'image'    => $imagePath,
             'password' => Hash::make($request->password),
             'role'     => 'client',
+        ]);
+
+        // Crear perfil de cliente
+        $client = \App\Models\Client::create([
+            'user_id' => $user->id,
+            'phone'   => $request->phone,
+            'address' => $request->address,
+            'cedula'  => $request->cedula,
+            'image'   => $imagePath,
         ]);
 
         $token = $user->createToken('client_token')->plainTextToken;
@@ -72,7 +77,7 @@ class AuthController extends Controller
             'status'  => 'success',
             'message' => 'Cliente registrado exitosamente.',
             'data'    => [
-                'user'         => $user,
+                'user'         => $user->load('client'),
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
             ],
@@ -118,7 +123,7 @@ class AuthController extends Controller
             'status'  => 'success',
             'message' => 'Inicio de sesión exitoso.',
             'data'    => [
-                'user'         => $user,
+                'user'         => $user->load('client'),
                 'access_token' => $token,
                 'token_type'   => 'Bearer',
             ],

@@ -23,12 +23,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'phone',
-        'address',
-        'cedula',
-        'experience',
-        'title',
-        'image',
         'role',
     ];
 
@@ -56,18 +50,26 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the service cases created by the user (as a client).
+     * Get the admin profile associated with the user.
      */
-    public function serviceCases(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function admin(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasMany(ServiceCase::class, 'client_id');
+        return $this->hasOne(Admin::class);
     }
 
     /**
-     * Get the responses provided by the user (as a technician).
+     * Get the client profile associated with the user.
      */
-    public function providedResponses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function client(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasMany(CaseResponse::class, 'technician_id');
+        return $this->hasOne(Client::class);
+    }
+
+    /**
+     * Get the technician profile associated with the user.
+     */
+    public function technician(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Technician::class);
     }
 }

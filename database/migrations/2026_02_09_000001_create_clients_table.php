@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('case_responses', function (Blueprint $table) {
+        Schema::create('clients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('service_case_id')->constrained('service_cases')->onDelete('cascade');
-            $table->foreignId('technician_id')->constrained('technicians')->onDelete('cascade');
-            $table->decimal('estimated_cost', 10, 2);
-            $table->text('questions')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('phone', 20)->nullable();
+            $table->string('address', 255)->nullable();
+            $table->string('cedula', 20)->nullable()->unique();
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('case_responses');
+        Schema::dropIfExists('clients');
     }
 };

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('service_cases', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
             $table->string('title');
             $table->text('description');
             $table->enum('status', ['active', 'pending', 'responded', 'resolved', 'cancelled'])->default('active');
