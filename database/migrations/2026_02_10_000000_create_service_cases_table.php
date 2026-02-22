@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
             $table->string('title');
             $table->text('description');
-            $table->enum('status', ['pending', 'responded', 'resolved', 'cancelled'])->default('pending');
+            $table->enum('status', ['active', 'pending', 'responded', 'resolved', 'cancelled'])->default('active');
             $table->timestamps();
         });
     }

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -10,14 +9,21 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
+     *
+     * El orden importa:
+     * 1. RolePermissionSeeder → crea roles y permisos en Spatie PRIMERO.
+     * 2. AdminSeeder          → crea el usuario admin y le asigna el rol.
+     * 3. ClientSeeder         → crea clientes de prueba con rol 'client'.
+     * 4. TechnicianSeeder     → crea técnicos de prueba con rol 'technician'.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        $this->call([
+            RolePermissionSeeder::class,
+            AdminSeeder::class,
+            ClientSeeder::class,
+            TechnicianSeeder::class,
         ]);
     }
 }
+
