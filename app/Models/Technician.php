@@ -13,12 +13,8 @@ class Technician extends Model
 
     protected $fillable = [
         'user_id',
-        'phone',
-        'address',
-        'cedula',
         'experience',
         'title',
-        'image',
     ];
 
     /**

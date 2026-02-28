@@ -24,12 +24,17 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name'              => fake()->name(),
+            'email'             => fake()->unique()->safeEmail(),
+            'phone'             => fake()->numerify('3##-###-####'),
+            'city'              => fake()->city(),
+            'address'           => fake()->address(),
+            'type_id'           => 'CC', // Cédula de Ciudadanía
+            'id_number'         => fake()->unique()->numerify('##########'),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
-            'role' => 'client',
+            'password'          => static::$password ??= Hash::make('password'),
+            'remember_token'    => Str::random(10),
+            'role'              => 'client',
         ];
     }
 
@@ -44,9 +49,6 @@ class UserFactory extends Factory
             $user->assignRole('client');
             \App\Models\Client::create([
                 'user_id' => $user->id,
-                'phone' => fake()->numerify('3##-###-####'),
-                'address' => fake()->address(),
-                'cedula' => fake()->unique()->numerify('##########'),
             ]);
         });
     }
@@ -61,11 +63,9 @@ class UserFactory extends Factory
         ])->afterCreating(function (\App\Models\User $user) {
             $user->assignRole('technician');
             \App\Models\Technician::create([
-                'user_id' => $user->id,
-                'address' => fake()->address(),
-                'cedula' => fake()->unique()->numerify('##########'),
+                'user_id'    => $user->id,
                 'experience' => fake()->paragraph(2),
-                'title' => fake()->randomElement([
+                'title'      => fake()->randomElement([
                     'Ing. Electrónico',
                     'Técnico en Refrigeración',
                     'Técnico en Sistemas',

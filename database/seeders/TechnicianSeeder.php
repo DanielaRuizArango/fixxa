@@ -17,9 +17,14 @@ class TechnicianSeeder extends Seeder
         $technician = User::firstOrCreate(
             ['email' => 'tecnico@fixxa.com'],
             [
-                'name'       => 'Técnico Demo',
-                'password'   => Hash::make('password'),
-                'role'       => 'technician',
+                'name'      => 'Técnico Demo',
+                'password'  => Hash::make('password'),
+                'role'      => 'technician',
+                'phone'     => '300-987-6543',
+                'city'      => 'Medellín',
+                'address'   => 'Carrera 5 # 10-15, Medellín',
+                'type_id'   => 'CC',
+                'id_number' => '2000000001',
             ]
         );
         // Sincronizar rol Spatie (evita duplicados si se corre de nuevo)
@@ -29,8 +34,6 @@ class TechnicianSeeder extends Seeder
         \App\Models\Technician::firstOrCreate(
             ['user_id' => $technician->id],
             [
-                'cedula'     => '2000000001',
-                'address'    => 'Carrera 5 # 10-15, Medellín',
                 'experience' => 'Más de 5 años de experiencia en mantenimiento de equipos electrónicos y de refrigeración.',
                 'title'      => 'Técnico en Refrigeración',
             ]

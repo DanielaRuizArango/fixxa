@@ -17,9 +17,14 @@ class AdminSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@fixxa.com'],
             [
-                'name'     => 'Administrador Fixxa',
-                'password' => Hash::make('password'),
-                'role'     => 'admin',
+                'name'      => 'Administrador Fixxa',
+                'password'  => Hash::make('password'),
+                'role'      => 'admin',
+                'phone'     => '0000000000',
+                'city'      => 'Admin City',
+                'address'   => 'Admin Address',
+                'type_id'   => 'CC',
+                'id_number' => '1234567890',
             ]
         );
 
