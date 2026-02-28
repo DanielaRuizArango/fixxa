@@ -14,10 +14,6 @@ return new class extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('phone', 20)->nullable();
-            $table->string('address', 255)->nullable();
-            $table->string('cedula', 20)->nullable()->unique();
-            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

@@ -14,12 +14,8 @@ return new class extends Migration
         Schema::create('technicians', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('phone', 20)->nullable();
-            $table->string('address', 255)->nullable();
-            $table->string('cedula', 20)->nullable()->unique();
             $table->text('experience')->nullable();
             $table->string('title', 255)->nullable();
-            $table->string('image')->nullable();
             $table->timestamps();
         });
     }
