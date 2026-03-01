@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\Client\AuthController as ClientAuthController;
-use App\Http\Controllers\Api\Client\ServiceCaseController;
-use App\Http\Controllers\Api\Client\ProfileController;
+use App\Http\Controllers\Api\Client\ServiceCaseController as ClientServiceCaseController;
+use App\Http\Controllers\Api\Client\ProfileController as ClientProfileController;
 use App\Http\Controllers\Api\Technician\AuthController as TechnicianAuthController;
+use App\Http\Controllers\Api\Technician\ProfileController as TechnicianProfileController;
+use App\Http\Controllers\Api\Technician\CaseResponseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,14 +20,14 @@ Route::prefix('client')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         // Perfil del cliente
-        Route::get('/me',       [ProfileController::class, 'show']);
-        Route::post('/profile', [ProfileController::class, 'update']); // Usar POST para poder enviar imágenes
+        Route::get('/me',       [ClientProfileController::class, 'show']);
+        Route::post('/profile', [ClientProfileController::class, 'update']); 
 
         // Casos de servicio (Cliente)
         Route::prefix('cases')->group(function () {
-            Route::get('/',        [ServiceCaseController::class, 'index']);
-            Route::post('/',       [ServiceCaseController::class, 'store']);
-            Route::get('/{id}',    [ServiceCaseController::class, 'show']);
+            Route::get('/',        [ClientServiceCaseController::class, 'index']);
+            Route::post('/',       [ClientServiceCaseController::class, 'store']);
+            Route::get('/{id}',    [ClientServiceCaseController::class, 'show']);
         });
 
         Route::post('/logout',  [ClientAuthController::class, 'logout']);
@@ -42,7 +44,16 @@ Route::prefix('technician')->group(function () {
     Route::post('/login',    [TechnicianAuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/me',       fn(Request $r) => $r->user());
+        // Perfil del técnico
+        Route::get('/me',       [TechnicianProfileController::class, 'show']);
+        Route::post('/profile', [TechnicianProfileController::class, 'update']);
+
+        // Respuestas y Casos Disponibles (Técnico)
+        Route::get('/cases',           [CaseResponseController::class, 'availableCases']);
+        Route::get('/cases/{id}',      [CaseResponseController::class, 'showCase']);
+        Route::post('/responses',      [CaseResponseController::class, 'store']);
+        Route::get('/responses/mine',  [CaseResponseController::class, 'myResponses']);
+
         Route::post('/logout',  [TechnicianAuthController::class, 'logout']);
     });
 });
