@@ -4,74 +4,47 @@ namespace App\Http\Controllers\Api\Technician;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Technician;
+use App\Http\Requests\Api\Technician\RegisterRequest;
+use App\Http\Requests\Api\Technician\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     /**
      * Registro de un nuevo técnico.
-     * Campos: nombre, cédula, correo, dirección, experiencia, título, imagen.
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255',
-            'cedula'      => 'required|string|max:20|unique:technicians,cedula',
-            'email'       => 'required|string|email|max:255|unique:users',
-            'address'     => 'required|string|max:255',
-            'experience'  => 'required|string|max:1000',
-            'title'       => 'required|string|max:255',
-            'password'    => 'required|string|min:8|confirmed',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ], [
-            'name.required'       => 'El nombre es obligatorio.',
-            'cedula.required'     => 'La cédula es obligatoria.',
-            'cedula.unique'       => 'Esta cédula ya está registrada.',
-            'email.required'      => 'El correo es obligatorio.',
-            'email.unique'        => 'Este correo ya está registrado.',
-            'address.required'    => 'La dirección es obligatoria.',
-            'experience.required' => 'La experiencia es obligatoria.',
-            'title.required'      => 'El título es obligatorio.',
-            'password.required'   => 'La contraseña es obligatoria.',
-            'password.min'        => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed'  => 'Las contraseñas no coinciden.',
-            'image.image'         => 'El archivo debe ser una imagen.',
-            'image.mimes'         => 'La imagen debe ser jpeg, png, jpg o webp.',
-            'image.max'           => 'La imagen no debe superar los 2 MB.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Error de validación',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
+        $validatedData = $request->validated();
 
         // Guardar imagen si fue enviada
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('technicians/images', 'public');
+            $imagePath = $request->file('image')->store('users/images', 'public');
         }
 
+        // Crear el usuario con rol de técnico
         $user = User::create([
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'password'   => Hash::make($request->password),
-            'role'       => 'technician',
+            'name'      => $validatedData['name'],
+            'email'     => $validatedData['email'],
+            'password'  => Hash::make($validatedData['password']),
+            'role'      => 'technician',
+            'phone'     => $validatedData['phone'],
+            'address'   => $validatedData['address'],
+            'city'      => $validatedData['city'],
+            'type_id'   => $validatedData['type_id'],
+            'id_number' => $validatedData['id_number'],
+            'image'     => $imagePath,
         ]);
 
-        // Crear perfil de técnico
-        $technician = \App\Models\Technician::create([
+        // Crear perfil de técnico (relación)
+        Technician::create([
             'user_id'    => $user->id,
-            'cedula'     => $request->cedula,
-            'address'    => $request->address,
-            'experience' => $request->experience,
-            'title'      => $request->title,
-            'image'      => $imagePath,
+            'experience' => $validatedData['experience'],
+            'title'      => $validatedData['title'],
         ]);
 
         $token = $user->createToken('technician_token')->plainTextToken;
@@ -90,30 +63,15 @@ class AuthController extends Controller
     /**
      * Login del técnico.
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email'    => 'required|string|email',
-            'password' => 'required|string',
-        ], [
-            'email.required'    => 'El correo es obligatorio.',
-            'email.email'       => 'Ingrese un correo válido.',
-            'password.required' => 'La contraseña es obligatoria.',
-        ]);
+        $validatedData = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Error de validación',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $user = User::where('email', $request->email)
+        $user = User::where('email', $validatedData['email'])
                     ->where('role', 'technician')
                     ->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($validatedData['password'], $user->password)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Credenciales incorrectas.',
@@ -146,3 +104,4 @@ class AuthController extends Controller
         ]);
     }
 }
+
