@@ -82,6 +82,7 @@ class AuthController extends Controller
             'message' => 'User logged in successfully',
             'data' => [
                 'user' => $user,
+                'role' => $user->role ?? ($user->getRoleNames()->first() ?? null),
                 'access_token' => $token,
                 'token_type' => 'Bearer',
             ],
