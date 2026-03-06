@@ -22,9 +22,8 @@ Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login'])
 */
 Route::prefix('client')->group(function () {
     Route::post('/register', [ClientAuthController::class, 'register']);
-    Route::post('/login', [ClientAuthController::class, 'login']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'role:client'])->group(function () {
         // Perfil del cliente
         Route::get('/me', [ClientProfileController::class, 'show']);
         Route::post('/profile', [ClientProfileController::class, 'update']);
@@ -47,9 +46,8 @@ Route::prefix('client')->group(function () {
 */
 Route::prefix('technician')->group(function () {
     Route::post('/register', [TechnicianAuthController::class, 'register']);
-    Route::post('/login', [TechnicianAuthController::class, 'login']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
         // Perfil del técnico
         Route::get('/me', [TechnicianProfileController::class, 'show']);
         Route::post('/profile', [TechnicianProfileController::class, 'update']);
