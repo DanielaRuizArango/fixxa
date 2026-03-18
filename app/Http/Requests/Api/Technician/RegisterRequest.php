@@ -33,7 +33,7 @@ class RegisterRequest extends FormRequest
             'id_number'  => 'required|string|max:20|unique:users',
             'experience' => 'required|string|max:2000',
             'title'      => 'required|string|max:255',
-            'password'   => 'required|string|min:8|confirmed',
+            'password'   => 'required|string|min:8',
             'image'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }
@@ -58,7 +58,7 @@ class RegisterRequest extends FormRequest
             'title.required'      => 'El título es obligatorio.',
             'password.required'   => 'La contraseña es obligatoria.',
             'password.min'        => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed'  => 'Las contraseñas no coinciden.',
+            // Removed password.confirmed message
             'image.image'         => 'El archivo debe ser una imagen.',
             'image.mimes'         => 'La imagen debe ser jpeg, png, jpg o webp.',
             'image.max'           => 'La imagen no debe superar los 2 MB.',
