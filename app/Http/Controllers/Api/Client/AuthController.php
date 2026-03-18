@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Client\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -18,44 +19,58 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request)
     {
-        $validatedData = $request->validated();
+        try {
+            $validatedData = $request->validated();
 
-        // Guardar imagen si fue enviada
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('users/images', 'public');
+            // Guardar imagen si fue enviada
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('users/images', 'public');
+            }
+
+            // Crear el usuario con rol de cliente
+            $user = User::create([
+                'name'      => $validatedData['name'],
+                'email'     => $validatedData['email'],
+                'password'  => Hash::make($validatedData['password']),
+                'role'      => 'client',
+                'phone'     => $validatedData['phone'],
+                'address'   => $validatedData['address'],
+                'city'      => $validatedData['city'],
+                'type_id'   => $validatedData['type_id'],
+                'id_number' => $validatedData['id_number'],
+                'image'     => $imagePath,
+            ]);
+
+            // Crear perfil de cliente (relación)
+            Client::create([
+                'user_id' => $user->id,
+            ]);
+
+            $token = $user->createToken('client_token')->plainTextToken;
+
+            Log::info('Cliente registrado exitosamente', ['user_id' => $user->id, 'email' => $user->email]);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Cliente registrado exitosamente.',
+                'data'    => [
+                    'user'         => $user->load('client'),
+                    'access_token' => $token,
+                    'token_type'   => 'Bearer',
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error en registro de cliente: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'data'  => $request->except(['password']),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Error al registrar el cliente.',
+            ], 500);
         }
-
-        // Crear el usuario con rol de cliente
-        $user = User::create([
-            'name'      => $validatedData['name'],
-            'email'     => $validatedData['email'],
-            'password'  => Hash::make($validatedData['password']),
-            'role'      => 'client',
-            'phone'     => $validatedData['phone'],
-            'address'   => $validatedData['address'],
-            'city'      => $validatedData['city'],
-            'type_id'   => $validatedData['type_id'],
-            'id_number' => $validatedData['id_number'],
-            'image'     => $imagePath,
-        ]);
-
-        // Crear perfil de cliente (relación)
-        Client::create([
-            'user_id' => $user->id,
-        ]);
-
-        $token = $user->createToken('client_token')->plainTextToken;
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Cliente registrado exitosamente.',
-            'data'    => [
-                'user'         => $user->load('client'),
-                'access_token' => $token,
-                'token_type'   => 'Bearer',
-            ],
-        ], 201);
     }
 
     /**
@@ -70,6 +85,7 @@ class AuthController extends Controller
                     ->first();
 
         if (!$user || !Hash::check($validatedData['password'], $user->password)) {
+            Log::warning('Intento de inicio de sesión fallido (Cliente)', ['email' => $validatedData['email']]);
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Credenciales incorrectas.',
@@ -77,6 +93,8 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('client_token')->plainTextToken;
+
+        Log::info('Inicio de sesión exitoso (Cliente)', ['user_id' => $user->id, 'email' => $user->email]);
 
         return response()->json([
             'status'  => 'success',
@@ -94,7 +112,10 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        Log::info('Sesión cerrada (Cliente)', ['user_id' => $user->id, 'email' => $user->email]);
 
         return response()->json([
             'status'  => 'success',

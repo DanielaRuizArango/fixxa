@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
+use Illuminate\Support\Facades\Log;
+
 class LoginRequest extends FormRequest
 {
     /**
@@ -46,6 +48,11 @@ class LoginRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
+        Log::error('Error de validación en login de cliente', [
+            'errors' => $validator->errors()->toArray(),
+            'email'  => $this->email,
+        ]);
+
         throw new HttpResponseException(response()->json([
             'status'  => 'error',
             'message' => 'Error de validación',

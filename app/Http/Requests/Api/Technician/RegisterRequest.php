@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
+use Illuminate\Support\Facades\Log;
+
 class RegisterRequest extends FormRequest
 {
     /**
@@ -70,6 +72,11 @@ class RegisterRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
+        Log::error('Error de validación en registro de técnico', [
+            'errors' => $validator->errors()->toArray(),
+            'data'   => $this->except(['password', 'password_confirmation']),
+        ]);
+
         throw new HttpResponseException(response()->json([
             'status'  => 'error',
             'message' => 'Error de validación',

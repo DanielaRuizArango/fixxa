@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
+use Illuminate\Support\Facades\Log;
+
 class StoreServiceCaseRequest extends FormRequest
 {
     /**
@@ -51,6 +53,11 @@ class StoreServiceCaseRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
+        Log::error('Error de validación al crear caso de servicio', [
+            'errors'  => $validator->errors()->toArray(),
+            'user_id' => $this->user()->id,
+        ]);
+
         throw new HttpResponseException(response()->json([
             'status'  => 'error',
             'message' => 'Error de validación',
