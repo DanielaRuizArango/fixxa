@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login']);
+Route::post('/forgot-password', [App\Http\Controllers\Api\AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [App\Http\Controllers\Api\AuthController::class, 'resetPassword']);
 
 /*
 |--------------------------------------------------------------------------
