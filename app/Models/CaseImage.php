@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CaseImage extends Model
 {
     use HasFactory;
+    
+    protected $table = 'service_case_images';
+
 
     protected $fillable = [
         'service_case_id',
