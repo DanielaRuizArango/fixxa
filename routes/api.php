@@ -72,4 +72,7 @@ Route::prefix('technician')->group(function () {
 Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::apiResource('clients', App\Http\Controllers\Admin\ClientController::class);
     Route::patch('clients/{id}/block', [App\Http\Controllers\Admin\ClientController::class, 'block']);
+    
+    Route::apiResource('technicians', App\Http\Controllers\Admin\TechnicianController::class);
+    Route::patch('technicians/{id}/block', [App\Http\Controllers\Admin\TechnicianController::class, 'block']);
 });
