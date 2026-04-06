@@ -30,6 +30,7 @@ class User extends Authenticatable
         'type_id',
         'id_number',
         'image',
+        'status',
     ];
 
     /**

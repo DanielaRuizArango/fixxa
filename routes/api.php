@@ -63,3 +63,13 @@ Route::prefix('technician')->group(function () {
         Route::post('/logout', [TechnicianAuthController::class, 'logout']);
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Admin
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::apiResource('clients', App\Http\Controllers\Admin\ClientController::class);
+    Route::patch('clients/{id}/block', [App\Http\Controllers\Admin\ClientController::class, 'block']);
+});
