@@ -128,7 +128,7 @@ class ChatController extends Controller
             'message' => $request->message,
         ]);
 
-        // LOGIC FOR REAL-TIME EVENT BROADCASTING WOULD GO HERE (e.g. broadcast(new MessageSent($message)))
+        broadcast(new \App\Events\MessageSent($message))->toOthers();
 
         return response()->json([
             'status' => 'success',
