@@ -70,6 +70,10 @@ Route::prefix('technician')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    // Perfil del admin
+    Route::get('/me', [App\Http\Controllers\Admin\ProfileController::class, 'show']);
+    Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update']);
+
     Route::apiResource('clients', App\Http\Controllers\Admin\ClientController::class);
     Route::patch('clients/{id}/block', [App\Http\Controllers\Admin\ClientController::class, 'block']);
     
