@@ -69,14 +69,23 @@ Route::prefix('technician')->group(function () {
 | Rutas de Admin
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    // Perfil del admin
+Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|moderator'])->group(function () {
+    // Perfil del admin (todos)
     Route::get('/me', [App\Http\Controllers\Admin\ProfileController::class, 'show']);
     Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update']);
 
-    Route::apiResource('clients', App\Http\Controllers\Admin\ClientController::class);
-    Route::patch('clients/{id}/block', [App\Http\Controllers\Admin\ClientController::class, 'block']);
-    
-    Route::apiResource('technicians', App\Http\Controllers\Admin\TechnicianController::class);
-    Route::patch('technicians/{id}/block', [App\Http\Controllers\Admin\TechnicianController::class, 'block']);
+    // Gestión de otros admins (solo super_admin)
+    Route::middleware('role:super_admin')->group(function () {
+        Route::apiResource('admins', App\Http\Controllers\Admin\AdminController::class);
+        Route::patch('admins/{id}/block', [App\Http\Controllers\Admin\AdminController::class, 'block']);
+    });
+
+    // Gestión de clientes y técnicos (super_admin, admin y moderator)
+    Route::middleware('role:super_admin|admin|moderator')->group(function () {
+        Route::apiResource('clients', App\Http\Controllers\Admin\ClientController::class);
+        Route::patch('clients/{id}/block', [App\Http\Controllers\Admin\ClientController::class, 'block']);
+        
+        Route::apiResource('technicians', App\Http\Controllers\Admin\TechnicianController::class);
+        Route::patch('technicians/{id}/block', [App\Http\Controllers\Admin\TechnicianController::class, 'block']);
+    });
 });

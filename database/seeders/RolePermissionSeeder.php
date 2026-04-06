@@ -33,12 +33,33 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Crear roles
+        $superAdminRole = Role::findOrCreate('super_admin');
         $adminRole = Role::findOrCreate('admin');
+        $moderatorRole = Role::findOrCreate('moderator');
         $clientRole = Role::findOrCreate('client');
         $technicianRole = Role::findOrCreate('technician');
 
         // Asignar permisos a roles
-        $adminRole->givePermissionTo(Permission::all());
+        $superAdminRole->givePermissionTo(Permission::all());
+
+        $adminRole->givePermissionTo([
+            'view users',
+            'create users',
+            'edit users',
+            'delete users',
+            'view cases',
+            'create cases',
+            'edit cases',
+            'delete cases',
+            'respond cases',
+        ]);
+        
+        $moderatorRole->givePermissionTo([
+            'view users',
+            'create users',
+            'edit users',
+            'view cases',
+        ]);
         
         $clientRole->givePermissionTo([
             'view cases',
@@ -52,12 +73,13 @@ class RolePermissionSeeder extends Seeder
             'respond cases',
         ]);
 
-        // Asignar rol admin al primer usuario (si existe)
+        // Asignar rol super_admin al primer usuario (si existe)
         $firstUser = User::first();
         if ($firstUser) {
-            // Limpiar roles previos para evitar duplicados si se vuelve a correr
             $firstUser->roles()->detach();
-            $firstUser->assignRole('admin');
+            $firstUser->assignRole('super_admin');
+            $firstUser->role = 'admin'; // Maintain existing role column structure
+            $firstUser->save();
         }
     }
 }
