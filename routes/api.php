@@ -89,3 +89,15 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
         Route::patch('technicians/{id}/block', [App\Http\Controllers\Admin\TechnicianController::class, 'block']);
     });
 });
+
+ /*
+|--------------------------------------------------------------------------
+| Rutas de Chat
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:sanctum', 'role:client|technician'])->prefix('chat')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\ChatController::class, 'index']);
+    Route::post('/start', [App\Http\Controllers\Api\ChatController::class, 'startConversation']);
+    Route::get('/{id}', [App\Http\Controllers\Api\ChatController::class, 'show']);
+    Route::post('/{id}/send', [App\Http\Controllers\Api\ChatController::class, 'sendMessage']);
+});
