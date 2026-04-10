@@ -106,3 +106,15 @@ Route::middleware(['auth:sanctum', 'role:client|technician'])->prefix('chat')->g
     Route::get('/{id}', [App\Http\Controllers\Api\ChatController::class, 'show']);
     Route::post('/{id}/send', [App\Http\Controllers\Api\ChatController::class, 'sendMessage']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Notificaciones
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('/mark-as-read', [App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    Route::patch('/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::delete('/{id}', [App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+});

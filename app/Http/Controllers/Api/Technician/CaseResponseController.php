@@ -43,6 +43,16 @@ class CaseResponseController extends Controller
                 $serviceCase->update(['status' => 'responded']);
             }
 
+            // Notificar al cliente
+            $clientUser = $serviceCase->client->user;
+            if ($clientUser) {
+                try {
+                    $clientUser->notify(new \App\Notifications\CaseResponded($response, $technician, $serviceCase));
+                } catch (\Exception $e) {
+                    Log::error('Error enviando notificación de respuesta a caso: ' . $e->getMessage());
+                }
+            }
+
             Log::info('Respuesta de caso enviada exitosamente', [
                 'response_id' => $response->id,
                 'technician_id' => $technician->id,

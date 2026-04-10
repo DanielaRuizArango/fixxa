@@ -142,6 +142,22 @@ class ChatController extends Controller
             'message' => $request->message,
         ]);
 
+        // Notificar al destinatario
+        $recipient = null;
+        if ($user->role === 'client') {
+            $recipient = $conversation->technician->user;
+        } else {
+            $recipient = $conversation->client->user;
+        }
+
+        if ($recipient) {
+            try {
+                $recipient->notify(new \App\Notifications\MessageReceived($message, $user));
+            } catch (\Exception $e) {
+                Log::error('Error enviando notificación de mensaje: ' . $e->getMessage());
+            }
+        }
+
         broadcast(new \App\Events\MessageSent($message))->toOthers();
 
         return response()->json([
