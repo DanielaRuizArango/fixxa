@@ -74,7 +74,7 @@ class CaseResponseController extends Controller
     {
         // Listar casos activos que NO han sido resueltos o cancelados
         $cases = ServiceCase::whereIn('status', ['active', 'responded'])
-            ->with(['images', 'client.user'])
+            ->with(['images', 'client.user', 'responses'])
             ->latest()
             ->get();
 

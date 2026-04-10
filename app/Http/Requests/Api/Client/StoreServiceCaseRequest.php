@@ -28,6 +28,7 @@ class StoreServiceCaseRequest extends FormRequest
         return [
             'title'       => 'required|string|max:255',
             'description' => 'required|string',
+            'city'        => 'nullable|string|max:100',
             'images'      => 'nullable|array',
             'images.*'    => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ];

@@ -35,6 +35,7 @@ class ServiceCaseController extends Controller
                 'client_id'   => $client->id,
                 'title'       => $validatedData['title'],
                 'description' => $validatedData['description'],
+                'city'        => $validatedData['city'] ?? $request->user()->city,
                 'status'      => 'active',
             ]);
 
