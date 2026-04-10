@@ -14,11 +14,11 @@ class TechnicianSeeder extends Seeder
     public function run(): void
     {
         // ── Técnico fijo de prueba ──────────────────────────────────────────
-        $technician = User::firstOrCreate(
+        $technician = User::updateOrCreate(
             ['email' => 'tecnico@fixxa.com'],
             [
                 'name'      => 'Técnico Demo',
-                'password'  => Hash::make('password'),
+                'password'  => 'password',
                 'role'      => 'technician',
                 'phone'     => '300-987-6543',
                 'city'      => 'Medellín',

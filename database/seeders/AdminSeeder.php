@@ -38,11 +38,11 @@ class AdminSeeder extends Seeder
         ];
 
         foreach ($admins as $adminData) {
-            $user = User::firstOrCreate(
+            $user = User::updateOrCreate(
                 ['email' => $adminData['email']],
                 [
                     'name'      => $adminData['name'],
-                    'password'  => Hash::make($adminData['password']),
+                    'password'  => $adminData['password'],
                     'role'      => $adminData['role'],
                     'phone'     => '0000000000',
                     'city'      => 'Admin City',

@@ -14,11 +14,11 @@ class ClientSeeder extends Seeder
     public function run(): void
     {
         // ── Cliente fijo de prueba ──────────────────────────────────────────
-        $client = User::firstOrCreate(
+        $client = User::updateOrCreate(
             ['email' => 'cliente@fixxa.com'],
             [
                 'name'      => 'Cliente Demo',
-                'password'  => Hash::make('password'),
+                'password'  => 'password',
                 'role'      => 'client',
                 'phone'     => '300-123-4567',
                 'city'      => 'Bogotá',
