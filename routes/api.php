@@ -35,6 +35,8 @@ Route::prefix('client')->group(function () {
             Route::get('/', [ClientServiceCaseController::class, 'index']);
             Route::post('/', [ClientServiceCaseController::class, 'store']);
             Route::get('/{id}', [ClientServiceCaseController::class, 'show']);
+            Route::put('/{id}', [ClientServiceCaseController::class, 'update']);
+            Route::delete('/{id}', [ClientServiceCaseController::class, 'destroy']);
         });
 
         Route::post('/logout', [ClientAuthController::class, 'logout']);

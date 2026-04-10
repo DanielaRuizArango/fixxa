@@ -110,4 +110,83 @@ class ServiceCaseController extends Controller
             'data'   => $case,
         ]);
     }
+    /**
+     * Update the specified service case in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $client = $request->user()->client;
+            $serviceCase = ServiceCase::where('client_id', $client->id)->findOrFail($id);
+
+            $validatedData = $request->validate([
+                'title'       => 'required|string|max:255',
+                'description' => 'required|string',
+                'city'        => 'nullable|string|max:255',
+            ]);
+
+            $serviceCase->update([
+                'title'       => $validatedData['title'],
+                'description' => $validatedData['description'],
+                'city'        => $validatedData['city'] ?? $serviceCase->city,
+            ]);
+
+            // Guardar nuevas imágenes si fueron enviadas
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('cases/images', 'public');
+                    CaseImage::create([
+                        'service_case_id' => $serviceCase->id,
+                        'image_path'      => $path,
+                    ]);
+                }
+            }
+
+            Log::info('Caso de servicio actualizado exitosamente', ['case_id' => $serviceCase->id, 'client_id' => $client->id]);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Caso de servicio actualizado exitosamente.',
+                'data'    => $serviceCase->load('images'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar caso de servicio: ' . $e->getMessage());
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Error al actualizar el caso de servicio.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified service case from storage.
+     */
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $client = $request->user()->client;
+            $serviceCase = ServiceCase::where('client_id', $client->id)->findOrFail($id);
+
+            // Eliminar imágenes de storage
+            foreach ($serviceCase->images as $image) {
+                Storage::disk('public')->delete($image->image_path);
+                $image->delete();
+            }
+
+            $serviceCase->delete();
+
+            Log::info('Caso de servicio eliminado exitosamente', ['case_id' => $id, 'client_id' => $client->id]);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Caso de servicio eliminado exitosamente.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar caso de servicio: ' . $e->getMessage());
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Error al eliminar el caso de servicio.',
+            ], 500);
+        }
+    }
 }
