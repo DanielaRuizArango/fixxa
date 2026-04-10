@@ -108,6 +108,26 @@ class AdminController extends Controller
     }
 
     /**
+     * Display the specified admin user.
+     */
+    public function show($id)
+    {
+        try {
+            $admin = User::where('role', 'admin')->with('admin')->findOrFail($id);
+            return response()->json([
+                'status' => 'success',
+                'data' => $admin
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error showing admin: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Admin user not found'
+            ], 404);
+        }
+    }
+
+    /**
      * Update the specified admin user.
      */
     public function update(Request $request, $id)
