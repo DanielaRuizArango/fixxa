@@ -49,6 +49,7 @@ class AdminController extends Controller
             'type_id' => 'nullable|string|max:20',
             'id_number' => 'nullable|string|max:20|unique:users',
             'image' => 'nullable|image|max:2048',
+            'spatie_role' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -78,6 +79,13 @@ class AdminController extends Controller
                 'image' => $imagePath,
                 'status' => 'active',
             ]);
+
+            // Assign Spatie role
+            if ($request->spatie_role) {
+                $user->assignRole($request->spatie_role);
+            } else {
+                $user->assignRole('admin');
+            }
 
             Admin::create(['user_id' => $user->id]);
 

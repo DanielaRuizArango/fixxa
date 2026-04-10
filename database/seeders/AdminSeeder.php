@@ -9,31 +9,57 @@ use Illuminate\Support\Facades\Hash;
 class AdminSeeder extends Seeder
 {
     /**
-     * Crea el usuario administrador con rol "admin" usando Spatie.
+     * Crea usuarios administrativos con diferentes roles.
      */
     public function run(): void
     {
-        // ── Administrador fijo ──────────────────────────────────────────────
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@fixxa.com'],
+        $admins = [
+            [
+                'name'      => 'Super Administrador',
+                'email'     => 'superadmin@fixxa.com',
+                'password'  => 'password',
+                'role'      => 'admin', // Atributo en tabla users
+                'spatie_role' => 'super_admin'
+            ],
             [
                 'name'      => 'Administrador Fixxa',
-                'password'  => Hash::make('password'),
+                'email'     => 'admin@fixxa.com',
+                'password'  => 'password',
                 'role'      => 'admin',
-                'phone'     => '0000000000',
-                'city'      => 'Admin City',
-                'address'   => 'Admin Address',
-                'type_id'   => 'CC',
-                'id_number' => '1234567890',
-            ]
-        );
+                'spatie_role' => 'admin'
+            ],
+            [
+                'name'      => 'Moderador Fixxa',
+                'email'     => 'moderator@fixxa.com',
+                'password'  => 'password',
+                'role'      => 'admin',
+                'spatie_role' => 'moderator'
+            ],
+        ];
 
-        // Sincronizar rol Spatie (evita duplicados si se corre de nuevo)
-        $admin->syncRoles(['admin']);
+        foreach ($admins as $adminData) {
+            $user = User::firstOrCreate(
+                ['email' => $adminData['email']],
+                [
+                    'name'      => $adminData['name'],
+                    'password'  => Hash::make($adminData['password']),
+                    'role'      => $adminData['role'],
+                    'phone'     => '0000000000',
+                    'city'      => 'Admin City',
+                    'address'   => 'Admin Address',
+                    'type_id'   => 'CC',
+                    'id_number' => 'ID-' . rand(1000, 9999),
+                    'status'    => 'active',
+                ]
+            );
 
-        // Create admin profile if it doesn't exist
-        \App\Models\Admin::firstOrCreate(
-            ['user_id' => $admin->id]
-        );
+            // Sincronizar rol Spatie
+            $user->syncRoles([$adminData['spatie_role']]);
+
+            // Crear perfil de admin si no existe
+            \App\Models\Admin::firstOrCreate(
+                ['user_id' => $user->id]
+            );
+        }
     }
 }

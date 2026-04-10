@@ -42,11 +42,11 @@ class ClientController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'phone' => 'nullable|string|max:20',
-            'city' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'type_id' => 'nullable|string|max:20',
-            'id_number' => 'nullable|string|max:20|unique:users',
+            'phone' => 'required|string|max:20',
+            'city' => 'required|string|max:50',
+            'address' => 'required|string|max:255',
+            'type_id' => 'required|string|max:20',
+            'id_number' => 'required|string|max:20|unique:users',
             'image' => 'nullable|image|max:2048',
         ]);
 
