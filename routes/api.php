@@ -87,6 +87,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
         
         Route::apiResource('technicians', App\Http\Controllers\Admin\TechnicianController::class);
         Route::patch('technicians/{id}/block', [App\Http\Controllers\Admin\TechnicianController::class, 'block']);
+
+        // Gestión de Casos
+        Route::get('cases', [App\Http\Controllers\Admin\ServiceCaseController::class, 'index']);
+        Route::get('cases/{id}', [App\Http\Controllers\Admin\ServiceCaseController::class, 'show']);
+        Route::patch('cases/{id}/status', [App\Http\Controllers\Admin\ServiceCaseController::class, 'updateStatus']);
     });
 });
 
