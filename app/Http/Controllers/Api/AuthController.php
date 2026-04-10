@@ -120,7 +120,7 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'User logged in successfully',
             'data' => [
-                'user' => $user,
+                'user' => $user->load(['client', 'technician', 'admin']),
                 'role' => $user->role ?? ($user->getRoleNames()->first() ?? null),
                 'access_token' => $token,
                 'token_type' => 'Bearer',

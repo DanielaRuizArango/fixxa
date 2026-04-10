@@ -48,27 +48,41 @@ class ChatController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'service_case_id' => 'required|exists:service_cases,id',
-            'technician_id' => 'required|exists:technicians,id',
+            'technician_id' => 'nullable|exists:technicians,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
-        $user = $request->user();
-        if ($user->role !== 'client') {
-            return response()->json(['status' => 'error', 'message' => 'Only clients can start a conversation.'], 403);
+        $user = Auth::user();
+        $serviceCase = ServiceCase::findOrFail($request->service_case_id);
+        
+        $clientId = null;
+        $technicianId = null;
+
+        if ($user->role === 'client') {
+            $clientId = $user->client->id;
+            $technicianId = $request->technician_id;
+            if (!$technicianId) {
+                return response()->json(['status' => 'error', 'message' => 'Technician ID is required for clients.'], 422);
+            }
+        } elseif ($user->role === 'technician') {
+            $technicianId = $user->technician->id;
+            $clientId = $serviceCase->client_id;
+        } else {
+             return response()->json(['status' => 'error', 'message' => 'Unauthorized role.'], 403);
         }
 
         $conversation = Conversation::firstOrCreate([
-            'service_case_id' => $request->service_case_id,
-            'client_id' => $user->client->id,
-            'technician_id' => $request->technician_id,
+            'service_case_id' => $serviceCase->id,
+            'client_id' => $clientId,
+            'technician_id' => $technicianId,
         ]);
 
         return response()->json([
             'status' => 'success',
-            'data' => $conversation->load(['technician.user', 'serviceCase'])
+            'data' => $conversation->load(['technician.user', 'client.user', 'serviceCase'])
         ]);
     }
 
