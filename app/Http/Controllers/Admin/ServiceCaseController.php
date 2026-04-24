@@ -15,7 +15,7 @@ class ServiceCaseController extends Controller
     public function index()
     {
         try {
-            $cases = ServiceCase::with(['client.user', 'responses.technician.user'])
+            $cases = ServiceCase::with(['client.user', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -38,7 +38,7 @@ class ServiceCaseController extends Controller
     public function show($id)
     {
         try {
-            $case = ServiceCase::with(['client.user', 'responses.technician.user', 'images'])
+            $case = ServiceCase::with(['client.user', 'responses.technician.user', 'images', 'rating', 'acceptedTechnician.user'])
                 ->findOrFail($id);
 
             return response()->json([

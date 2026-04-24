@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\Api\Client\AuthController as ClientAuthController;
+use App\Http\Controllers\Api\Client\CaseManagementController;
 use App\Http\Controllers\Api\Client\ProfileController as ClientProfileController;
+use App\Http\Controllers\Api\Client\RatingController;
 use App\Http\Controllers\Api\Client\ServiceCaseController as ClientServiceCaseController;
 use App\Http\Controllers\Api\Technician\AuthController as TechnicianAuthController;
 use App\Http\Controllers\Api\Technician\CaseResponseController;
 use App\Http\Controllers\Api\Technician\ProfileController as TechnicianProfileController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,6 +42,14 @@ Route::prefix('client')->group(function () {
             Route::delete('/{id}', [ClientServiceCaseController::class, 'destroy']);
         });
 
+        // Gestión de propuestas y estados
+        Route::post('/cases/{caseId}/proposals/{responseId}/accept', [CaseManagementController::class, 'acceptProposal']);
+        Route::delete('/cases/{caseId}/proposals/{responseId}/reject', [CaseManagementController::class, 'rejectProposal']);
+        Route::patch('/cases/{caseId}/resolve', [CaseManagementController::class, 'resolveCase']);
+
+        // Calificaciones
+        Route::post('/ratings', [RatingController::class, 'store']);
+
         Route::post('/logout', [ClientAuthController::class, 'logout']);
     });
 });
@@ -61,6 +72,19 @@ Route::prefix('technician')->group(function () {
         Route::get('/cases/{id}', [CaseResponseController::class, 'showCase']);
         Route::post('/responses', [CaseResponseController::class, 'store']);
         Route::get('/responses/mine', [CaseResponseController::class, 'myResponses']);
+
+        // Calificación promedio del técnico
+        Route::get('/my-rating', function (Request $request) {
+            $technician = $request->user()->technician;
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'average_score' => round($technician->ratings()->avg('score'), 1),
+                    'total_ratings' => $technician->ratings()->count(),
+                    'ratings'       => $technician->ratings()->with('client.user')->latest()->get(),
+                ],
+            ]);
+        });
 
         Route::post('/logout', [TechnicianAuthController::class, 'logout']);
     });

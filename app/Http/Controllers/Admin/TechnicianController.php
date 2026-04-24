@@ -20,7 +20,7 @@ class TechnicianController extends Controller
     public function index()
     {
         try {
-            $technicians = User::where('role', 'technician')->with('technician')->get();
+            $technicians = Technician::with(['user', 'ratings'])->get();
             return response()->json([
                 'status' => 'success',
                 'data' => $technicians

@@ -32,4 +32,21 @@ class Technician extends Model
     {
         return $this->hasMany(CaseResponse::class);
     }
+
+    /**
+     * Get all ratings received by this technician.
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Get the average rating score for this technician.
+     */
+    public function getAverageRatingAttribute(): ?float
+    {
+        $avg = $this->ratings()->avg('score');
+        return $avg !== null ? round($avg, 1) : null;
+    }
 }

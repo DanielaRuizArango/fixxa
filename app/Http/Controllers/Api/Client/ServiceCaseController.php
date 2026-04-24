@@ -85,7 +85,7 @@ class ServiceCaseController extends Controller
         }
 
         $cases = ServiceCase::where('client_id', $client->id)
-            ->with(['images', 'responses.technician.user'])
+            ->with(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
             ->latest()
             ->get();
 
@@ -102,7 +102,7 @@ class ServiceCaseController extends Controller
     {
         $client = $request->user()->client;
         $case = ServiceCase::where('client_id', $client->id)
-            ->with(['images', 'responses.technician.user'])
+            ->with(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
             ->findOrFail($id);
 
         return response()->json([
