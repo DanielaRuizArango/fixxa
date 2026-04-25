@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\CaseResponse;
+use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\ServiceCase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CaseManagementController extends Controller
 {
@@ -40,7 +43,9 @@ class CaseManagementController extends Controller
             ], 422);
         }
 
-        $response = CaseResponse::where('service_case_id', $serviceCase->id)->find($responseId);
+        $response = CaseResponse::where('service_case_id', $serviceCase->id)
+            ->with('technician')
+            ->find($responseId);
 
         if (!$response) {
             return response()->json([
@@ -54,10 +59,35 @@ class CaseManagementController extends Controller
             'accepted_technician_id' => $response->technician_id,
         ]);
 
+        // Create or get the conversation between client and technician
+        $conversation = Conversation::firstOrCreate(
+            [
+                'service_case_id' => $serviceCase->id,
+                'client_id'       => $client->id,
+                'technician_id'   => $response->technician_id,
+            ]
+        );
+
+        // Create the initial message with the technician's response content
+        if ($conversation->messages()->count() === 0 && $response->questions) {
+            try {
+                Message::create([
+                    'conversation_id' => $conversation->id,
+                    'sender_id'       => $response->technician->user_id,
+                    'message'         => $response->questions,
+                    'is_read'         => false,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error creating initial message: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
-            'status'  => 'success',
-            'message' => 'Propuesta aceptada.',
-            'data'    => $serviceCase->load(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user']),
+            'status'      => 'success',
+            'message'     => 'Propuesta aceptada.',
+            'conversation_id' => $conversation->id,
+            'messages'    => $conversation->messages()->with('sender')->oldest()->get(),
+            'data'        => $serviceCase->load(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user']),
         ]);
     }
 

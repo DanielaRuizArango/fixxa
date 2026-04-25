@@ -27,6 +27,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ratings');
+        Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('service_ratings');
+        Schema::enableForeignKeyConstraints();
     }
 };
