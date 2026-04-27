@@ -87,7 +87,7 @@ class ServiceCaseController extends Controller
         $cases = ServiceCase::where('client_id', $client->id)
             ->with(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return response()->json([
             'status' => 'success',
@@ -118,6 +118,13 @@ class ServiceCaseController extends Controller
         try {
             $client = $request->user()->client;
             $serviceCase = ServiceCase::where('client_id', $client->id)->findOrFail($id);
+            
+            if (!in_array($serviceCase->status, ['active', 'pending'])) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'No puedes modificar un caso que ya ha sido respondido, resuelto o cancelado.',
+                ], 403);
+            }
 
             $validatedData = $request->validate([
                 'title'       => 'required|string|max:255',
@@ -166,6 +173,13 @@ class ServiceCaseController extends Controller
         try {
             $client = $request->user()->client;
             $serviceCase = ServiceCase::where('client_id', $client->id)->findOrFail($id);
+
+            if (!in_array($serviceCase->status, ['active', 'pending'])) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'No puedes eliminar un caso que ya ha sido respondido, resuelto o cancelado.',
+                ], 403);
+            }
 
             // Eliminar imágenes de storage
             foreach ($serviceCase->images as $image) {

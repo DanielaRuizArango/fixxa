@@ -21,18 +21,18 @@ class ChatController extends Controller
         $user = Auth::user();
         $conversations = [];
 
-        if ($user->role === 'client') {
+        if ($user->hasRole('client')) {
             $conversations = Conversation::where('client_id', $user->client->id)
                 ->with(['technician.user', 'serviceCase', 'messages' => function($q) {
                     $q->latest()->limit(1);
                 }])
-                ->get();
-        } elseif ($user->role === 'technician') {
+                ->paginate(10);
+        } elseif ($user->hasRole('technician')) {
             $conversations = Conversation::where('technician_id', $user->technician->id)
                 ->with(['client.user', 'serviceCase', 'messages' => function($q) {
                     $q->latest()->limit(1);
                 }])
-                ->get();
+                ->paginate(10);
         }
 
         return response()->json([
@@ -61,13 +61,13 @@ class ChatController extends Controller
         $clientId = null;
         $technicianId = null;
 
-        if ($user->role === 'client') {
+        if ($user->hasRole('client')) {
             $clientId = $user->client->id;
             $technicianId = $request->technician_id;
             if (!$technicianId) {
                 return response()->json(['status' => 'error', 'message' => 'Technician ID is required for clients.'], 422);
             }
-        } elseif ($user->role === 'technician') {
+        } elseif ($user->hasRole('technician')) {
             $technicianId = $user->technician->id;
             $clientId = $serviceCase->client_id;
         } else {
@@ -95,8 +95,8 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
 
         // Check if user belongs to conversation
-        if (($user->role === 'client' && $conversation->client_id !== $user->client->id) ||
-            ($user->role === 'technician' && $conversation->technician_id !== $user->technician->id)) {
+        if (($user->hasRole('client') && $conversation->client_id !== $user->client->id) ||
+            ($user->hasRole('technician') && $conversation->technician_id !== $user->technician->id)) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized Access'], 403);
         }
 
@@ -131,8 +131,8 @@ class ChatController extends Controller
         $conversation = Conversation::findOrFail($id);
 
         // Check if user belongs to conversation
-        if (($user->role === 'client' && $conversation->client_id !== $user->client->id) ||
-            ($user->role === 'technician' && $conversation->technician_id !== $user->technician->id)) {
+        if (($user->hasRole('client') && $conversation->client_id !== $user->client->id) ||
+            ($user->hasRole('technician') && $conversation->technician_id !== $user->technician->id)) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized Access'], 403);
         }
 
@@ -144,7 +144,7 @@ class ChatController extends Controller
 
         // Notificar al destinatario
         $recipient = null;
-        if ($user->role === 'client') {
+        if ($user->hasRole('client')) {
             $recipient = $conversation->technician->user;
         } else {
             $recipient = $conversation->client->user;

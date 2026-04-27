@@ -20,7 +20,7 @@ class AdminController extends Controller
     public function index()
     {
         try {
-            $admins = User::where('role', 'admin')->with('admin')->get();
+            $admins = User::role(['super_admin', 'admin', 'moderator'])->with('admin')->paginate(10);
             return response()->json([
                 'status' => 'success',
                 'data' => $admins
@@ -70,7 +70,6 @@ class AdminController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'admin',
                 'phone' => $request->phone,
                 'city' => $request->city,
                 'address' => $request->address,
@@ -113,7 +112,7 @@ class AdminController extends Controller
     public function show($id)
     {
         try {
-            $admin = User::where('role', 'admin')->with('admin')->findOrFail($id);
+            $admin = User::role(['super_admin', 'admin', 'moderator'])->with('admin')->findOrFail($id);
             return response()->json([
                 'status' => 'success',
                 'data' => $admin
@@ -133,7 +132,7 @@ class AdminController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $user = User::where('role', 'admin')->findOrFail($id);
+            $user = User::role(['super_admin', 'admin', 'moderator'])->findOrFail($id);
 
             // Avoid self-lock or self-status-change if necessary
             // Or maybe allow it for certain admins. For now, just allow admin management.
@@ -186,7 +185,7 @@ class AdminController extends Controller
     public function block($id)
     {
         try {
-            $adminToBlock = User::where('role', 'admin')->findOrFail($id);
+            $adminToBlock = User::role(['super_admin', 'admin', 'moderator'])->findOrFail($id);
             
             // Avoid blocking yourself
             if (auth()->id() == $adminToBlock->id) {
@@ -220,7 +219,7 @@ class AdminController extends Controller
     public function destroy($id)
     {
         try {
-            $adminToDelete = User::where('role', 'admin')->findOrFail($id);
+            $adminToDelete = User::role(['super_admin', 'admin', 'moderator'])->findOrFail($id);
             
             // Avoid deleting yourself
             if (auth()->id() == $adminToDelete->id) {

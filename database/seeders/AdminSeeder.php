@@ -18,21 +18,18 @@ class AdminSeeder extends Seeder
                 'name'      => 'Super Administrador',
                 'email'     => 'superadmin@fixxa.com',
                 'password'  => 'password',
-                'role'      => 'admin', // Atributo en tabla users
                 'spatie_role' => 'super_admin'
             ],
             [
                 'name'      => 'Administrador Fixxa',
                 'email'     => 'admin@fixxa.com',
                 'password'  => 'password',
-                'role'      => 'admin',
                 'spatie_role' => 'admin'
             ],
             [
                 'name'      => 'Moderador Fixxa',
                 'email'     => 'moderator@fixxa.com',
                 'password'  => 'password',
-                'role'      => 'admin',
                 'spatie_role' => 'moderator'
             ],
         ];
@@ -43,7 +40,6 @@ class AdminSeeder extends Seeder
                 [
                     'name'      => $adminData['name'],
                     'password'  => $adminData['password'],
-                    'role'      => $adminData['role'],
                     'phone'     => '0000000000',
                     'city'      => 'Admin City',
                     'address'   => 'Admin Address',

@@ -19,7 +19,6 @@ class ClientSeeder extends Seeder
             [
                 'name'      => 'Cliente Demo',
                 'password'  => 'password',
-                'role'      => 'client',
                 'phone'     => '300-123-4567',
                 'city'      => 'Bogotá',
                 'address'   => 'Calle 10 # 20-30, Bogotá',

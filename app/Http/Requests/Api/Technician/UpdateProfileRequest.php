@@ -13,7 +13,7 @@ class UpdateProfileRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->role === 'technician';
+        return $this->user()->hasRole('technician');
     }
 
     /**

@@ -15,7 +15,7 @@ class StoreServiceCaseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->role === 'client';
+        return $this->user()->hasRole('client');
     }
 
     /**

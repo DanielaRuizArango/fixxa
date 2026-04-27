@@ -32,7 +32,6 @@ class AuthController extends Controller
                 'name'      => $validatedData['name'],
                 'email'     => $validatedData['email'],
                 'password'  => Hash::make($validatedData['password']),
-                'role'      => 'technician',
                 'phone'     => $validatedData['phone'],
                 'address'   => $validatedData['address'],
                 'city'      => $validatedData['city'],
@@ -40,6 +39,8 @@ class AuthController extends Controller
                 'id_number' => $validatedData['id_number'],
                 'image'     => $imagePath,
             ]);
+            
+            $user->assignRole('technician');
 
             // Crear perfil de técnico (relación)
             Technician::create([
@@ -82,7 +83,7 @@ class AuthController extends Controller
         $validatedData = $request->validated();
 
         $user = User::where('email', $validatedData['email'])
-                    ->where('role', 'technician')
+                    ->role('technician')
                     ->first();
 
         if (!$user || !Hash::check($validatedData['password'], $user->password)) {

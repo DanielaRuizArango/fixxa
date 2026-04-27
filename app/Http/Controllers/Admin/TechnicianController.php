@@ -20,7 +20,7 @@ class TechnicianController extends Controller
     public function index()
     {
         try {
-            $technicians = Technician::with(['user', 'ratings'])->get();
+            $technicians = Technician::with(['user', 'ratings'])->paginate(10);
             return response()->json([
                 'status' => 'success',
                 'data' => $technicians
@@ -71,7 +71,6 @@ class TechnicianController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'technician',
                 'phone' => $request->phone,
                 'city' => $request->city,
                 'address' => $request->address,
@@ -80,6 +79,8 @@ class TechnicianController extends Controller
                 'image' => $imagePath,
                 'status' => 'active',
             ]);
+
+            $user->assignRole('technician');
 
             Technician::create([
                 'user_id' => $user->id,
@@ -111,7 +112,7 @@ class TechnicianController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $user = User::where('role', 'technician')->findOrFail($id);
+            $user = User::role('technician')->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|string|max:255',
@@ -172,7 +173,7 @@ class TechnicianController extends Controller
     public function block($id)
     {
         try {
-            $user = User::where('role', 'technician')->findOrFail($id);
+            $user = User::role('technician')->findOrFail($id);
             
             $user->status = ($user->status === 'active') ? 'blocked' : 'active';
             $user->save();
@@ -198,7 +199,7 @@ class TechnicianController extends Controller
     public function destroy($id)
     {
         try {
-            $user = User::where('role', 'technician')->findOrFail($id);
+            $user = User::role('technician')->findOrFail($id);
             
             if ($user->image) {
                 Storage::disk('public')->delete($user->image);

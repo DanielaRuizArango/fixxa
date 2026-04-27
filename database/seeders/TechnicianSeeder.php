@@ -19,7 +19,6 @@ class TechnicianSeeder extends Seeder
             [
                 'name'      => 'Técnico Demo',
                 'password'  => 'password',
-                'role'      => 'technician',
                 'phone'     => '300-987-6543',
                 'city'      => 'Medellín',
                 'address'   => 'Carrera 5 # 10-15, Medellín',

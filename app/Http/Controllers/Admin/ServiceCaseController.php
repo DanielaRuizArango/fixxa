@@ -17,7 +17,7 @@ class ServiceCaseController extends Controller
         try {
             $cases = ServiceCase::with(['client.user', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
                 ->orderBy('created_at', 'desc')
-                ->get();
+                ->paginate(10);
 
             return response()->json([
                 'status' => 'success',

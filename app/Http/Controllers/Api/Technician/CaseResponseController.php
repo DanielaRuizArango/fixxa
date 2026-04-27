@@ -86,7 +86,7 @@ class CaseResponseController extends Controller
         $cases = ServiceCase::whereIn('status', ['active', 'responded'])
             ->with(['images', 'client.user', 'responses'])
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return response()->json([
             'status' => 'success',
@@ -117,7 +117,7 @@ class CaseResponseController extends Controller
         $responses = CaseResponse::where('technician_id', $technician->id)
             ->with('serviceCase')
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return response()->json([
             'status' => 'success',

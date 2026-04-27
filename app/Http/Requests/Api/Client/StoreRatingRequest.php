@@ -13,7 +13,7 @@ class StoreRatingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === 'client';
+        return $this->user() && $this->user()->hasRole('client');
     }
 
     /**

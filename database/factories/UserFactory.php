@@ -34,7 +34,6 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),
-            'role'              => 'client',
         ];
     }
 
@@ -44,7 +43,6 @@ class UserFactory extends Factory
     public function client(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => 'client',
         ])->afterCreating(function (\App\Models\User $user) {
             $user->assignRole('client');
             \App\Models\Client::create([
@@ -59,7 +57,6 @@ class UserFactory extends Factory
     public function technician(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => 'technician',
         ])->afterCreating(function (\App\Models\User $user) {
             $user->assignRole('technician');
             \App\Models\Technician::create([
@@ -82,7 +79,6 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => 'admin',
         ])->afterCreating(function (\App\Models\User $user) {
             $user->assignRole('admin');
             \App\Models\Admin::create([

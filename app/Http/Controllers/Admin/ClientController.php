@@ -19,7 +19,7 @@ class ClientController extends Controller
     public function index()
     {
         try {
-            $clients = User::where('role', 'client')->with('client')->get();
+            $clients = User::role('client')->with('client')->paginate(10);
             return response()->json([
                 'status' => 'success',
                 'data' => $clients
@@ -67,7 +67,6 @@ class ClientController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'client',
                 'phone' => $request->phone,
                 'city' => $request->city,
                 'address' => $request->address,
@@ -76,6 +75,8 @@ class ClientController extends Controller
                 'image' => $imagePath,
                 'status' => 'active',
             ]);
+
+            $user->assignRole('client');
 
             Client::create(['user_id' => $user->id]);
 
@@ -100,7 +101,7 @@ class ClientController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $user = User::where('role', 'client')->findOrFail($id);
+            $user = User::role('client')->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|string|max:255',
@@ -150,7 +151,7 @@ class ClientController extends Controller
     public function block($id)
     {
         try {
-            $user = User::where('role', 'client')->findOrFail($id);
+            $user = User::role('client')->findOrFail($id);
             
             $user->status = ($user->status === 'active') ? 'blocked' : 'active';
             $user->save();
@@ -176,7 +177,7 @@ class ClientController extends Controller
     public function destroy($id)
     {
         try {
-            $user = User::where('role', 'client')->findOrFail($id);
+            $user = User::role('client')->findOrFail($id);
             
             if ($user->image) {
                 Storage::disk('public')->delete($user->image);
