@@ -118,6 +118,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
         Route::get('cases', [App\Http\Controllers\Admin\ServiceCaseController::class, 'index']);
         Route::get('cases/{id}', [App\Http\Controllers\Admin\ServiceCaseController::class, 'show']);
         Route::patch('cases/{id}/status', [App\Http\Controllers\Admin\ServiceCaseController::class, 'updateStatus']);
+
+        // Alertas de Sistema
+        Route::get('alerts', [App\Http\Controllers\Admin\SystemAlertController::class, 'index']);
     });
 });
 
