@@ -49,4 +49,11 @@ class Technician extends Model
         $avg = $this->ratings()->avg('score');
         return $avg !== null ? round($avg, 1) : null;
     }
+    /**
+     * Get the assets (tools, certifications, work) for the technician.
+     */
+    public function assets(): HasMany
+    {
+        return $this->hasMany(TechnicianAsset::class);
+    }
 }
