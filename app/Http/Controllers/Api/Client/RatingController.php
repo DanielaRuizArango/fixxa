@@ -62,6 +62,16 @@ class RatingController extends Controller
             'comment'         => $request->comment,
         ]);
 
+        // Notificar al técnico
+        $technicianUser = $serviceCase->acceptedTechnician->user;
+        if ($technicianUser) {
+            try {
+                $technicianUser->notify(new \App\Notifications\TechnicianRated($rating, $client, $serviceCase));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Error enviando notificación de calificación: ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Calificación enviada.',
