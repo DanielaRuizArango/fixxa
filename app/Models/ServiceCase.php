@@ -19,6 +19,8 @@ class ServiceCase extends Model
         'city',
         'status',
         'accepted_technician_id',
+        'latitude',
+        'longitude',
     ];
 
     /**

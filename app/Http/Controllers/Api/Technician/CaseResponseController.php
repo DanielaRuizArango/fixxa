@@ -80,13 +80,40 @@ class CaseResponseController extends Controller
     /**
      * Display a listing of available service cases for technicians.
      */
-    public function availableCases()
+    public function availableCases(Request $request)
     {
-        // Listar casos activos que NO han sido resueltos o cancelados
-        $cases = ServiceCase::whereIn('status', ['active', 'responded'])
-            ->with(['images', 'client.user', 'responses'])
-            ->latest()
-            ->paginate(10);
+        $query = ServiceCase::whereIn('status', ['active', 'responded'])
+            ->with(['images', 'client.user', 'responses']);
+
+        // Filtro por búsqueda (Título o Descripción)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Filtro por ciudad
+        if ($request->filled('city')) {
+            $query->where('city', 'LIKE', "%{$request->city}%");
+        }
+
+        // Filtro por radio (Cercanía)
+        if ($request->filled('radius') && $request->filled('lat') && $request->filled('lng')) {
+            $lat = $request->lat;
+            $lng = $request->lng;
+            $radius = $request->radius; // En kilómetros
+
+            // Fórmula Haversine para calcular distancia en SQL
+            $query->selectRaw("*, (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance", [$lat, $lng, $lat])
+                  ->having('distance', '<=', $radius)
+                  ->orderBy('distance');
+        } else {
+            $query->latest();
+        }
+
+        $cases = $query->paginate(10);
 
         return response()->json([
             'status' => 'success',
