@@ -85,10 +85,29 @@ class ServiceCaseController extends Controller
             ], 403);
         }
 
-        $cases = ServiceCase::where('client_id', $client->id)
-            ->with(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
-            ->latest()
-            ->paginate(10);
+        $query = ServiceCase::where('client_id', $client->id)
+            ->with(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user']);
+
+        // Búsqueda por título o descripción
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por estado
+        if ($request->has('status') && $request->status != '') {
+            $query->where('status', $request->status);
+        }
+
+        // Filtro por tipo de servicio
+        if ($request->has('service_type') && $request->service_type != '') {
+            $query->where('service_type', $request->service_type);
+        }
+
+        $cases = $query->latest()->paginate(10);
 
         return response()->json([
             'status' => 'success',

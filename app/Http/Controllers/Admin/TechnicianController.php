@@ -17,10 +17,37 @@ class TechnicianController extends Controller
     /**
      * Display a listing of technicians.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $technicians = Technician::with(['user', 'ratings'])->paginate(10);
+            $query = Technician::with(['user', 'ratings']);
+
+            // Búsqueda por nombre, email o número de identificación del usuario asociado
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->whereHas('user', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('id_number', 'like', "%{$search}%");
+                });
+            }
+
+            // Filtro por ciudad del usuario
+            if ($request->has('city') && $request->city != '') {
+                $query->whereHas('user', function($q) use ($request) {
+                    $q->where('city', $request->city);
+                });
+            }
+
+            // Filtro por estado del usuario
+            if ($request->has('status') && $request->status != '') {
+                $query->whereHas('user', function($q) use ($request) {
+                    $q->where('status', $request->status);
+                });
+            }
+
+            $technicians = $query->paginate(10);
+            
             return response()->json([
                 'status' => 'success',
                 'data' => $technicians

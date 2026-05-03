@@ -141,10 +141,25 @@ class CaseResponseController extends Controller
     public function myResponses(Request $request)
     {
         $technician = $request->user()->technician;
-        $responses = CaseResponse::where('technician_id', $technician->id)
-            ->with('serviceCase')
-            ->latest()
-            ->paginate(10);
+        $query = CaseResponse::where('technician_id', $technician->id)
+            ->with('serviceCase');
+
+        // Búsqueda por título del caso relacionado
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->whereHas('serviceCase', function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%");
+            });
+        }
+
+        // Filtro por estado del caso relacionado
+        if ($request->has('status') && $request->status != '') {
+            $query->whereHas('serviceCase', function($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+
+        $responses = $query->latest()->paginate(10);
 
         return response()->json([
             'status' => 'success',

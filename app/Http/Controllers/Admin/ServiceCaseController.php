@@ -12,12 +12,36 @@ class ServiceCaseController extends Controller
     /**
      * Display a listing of all service cases.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $cases = ServiceCase::with(['client.user', 'responses.technician.user', 'rating', 'acceptedTechnician.user'])
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+            $query = ServiceCase::with(['client.user', 'responses.technician.user', 'rating', 'acceptedTechnician.user']);
+
+            // Búsqueda por título o descripción
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            // Filtro por estado
+            if ($request->has('status') && $request->status != '') {
+                $query->where('status', $request->status);
+            }
+
+            // Filtro por ciudad
+            if ($request->has('city') && $request->city != '') {
+                $query->where('city', $request->city);
+            }
+
+            // Filtro por tipo de servicio
+            if ($request->has('service_type') && $request->service_type != '') {
+                $query->where('service_type', $request->service_type);
+            }
+
+            $cases = $query->orderBy('created_at', 'desc')->paginate(10);
 
             return response()->json([
                 'status' => 'success',

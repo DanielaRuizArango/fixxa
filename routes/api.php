@@ -75,17 +75,7 @@ Route::prefix('technician')->group(function () {
         Route::get('/responses/mine', [CaseResponseController::class, 'myResponses']);
 
         // Calificación promedio del técnico
-        Route::get('/my-rating', function (Request $request) {
-            $technician = $request->user()->technician;
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'average_score' => round($technician->ratings()->avg('score'), 1),
-                    'total_ratings' => $technician->ratings()->count(),
-                    'ratings'       => $technician->ratings()->with('client.user')->latest()->get(),
-                ],
-            ]);
-        });
+        Route::get('/my-rating', [App\Http\Controllers\Api\Technician\RatingController::class, 'index']);
 
         // Activos del técnico (Herramientas, Certificaciones, Trabajos)
         Route::get('/assets', [TechnicianAssetController::class, 'index']);
@@ -124,6 +114,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
         Route::get('cases', [App\Http\Controllers\Admin\ServiceCaseController::class, 'index']);
         Route::get('cases/{id}', [App\Http\Controllers\Admin\ServiceCaseController::class, 'show']);
         Route::patch('cases/{id}/status', [App\Http\Controllers\Admin\ServiceCaseController::class, 'updateStatus']);
+
+        // Gestión de Calificaciones
+        Route::get('ratings', [App\Http\Controllers\Admin\RatingController::class, 'index']);
+        Route::delete('ratings/{id}', [App\Http\Controllers\Admin\RatingController::class, 'destroy']);
 
         // Alertas de Sistema
         Route::get('alerts', [App\Http\Controllers\Admin\SystemAlertController::class, 'index']);

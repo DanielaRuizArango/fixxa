@@ -16,10 +16,33 @@ class ClientController extends Controller
     /**
      * Display a listing of clients.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $clients = User::role('client')->with('client')->paginate(10);
+            $query = User::role('client')->with('client');
+
+            // Búsqueda por nombre, email o número de identificación
+            if ($request->has('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('id_number', 'like', "%{$search}%");
+                });
+            }
+
+            // Filtro por ciudad
+            if ($request->has('city') && $request->city != '') {
+                $query->where('city', $request->city);
+            }
+
+            // Filtro por estado
+            if ($request->has('status') && $request->status != '') {
+                $query->where('status', $request->status);
+            }
+
+            $clients = $query->paginate(10);
+            
             return response()->json([
                 'status' => 'success',
                 'data' => $clients
