@@ -30,6 +30,7 @@ class ServiceCaseSeeder extends Seeder
                     'client_id' => $client->id,
                     'title' => "Problema con mi equipo - " . $client->user->name . " #$i",
                     'description' => "Hola, tengo un inconveniente con uno de mis equipos y requiero asistencia técnica profesional. Es el caso número $i que reporto.",
+                    'service_type' => $i % 2 == 0 ? 'remote' : 'presential',
                     'city' => $client->user->city,
                     'status' => 'active',
                 ]);

@@ -26,11 +26,12 @@ class StoreServiceCaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string',
-            'city'        => 'nullable|string|max:100',
-            'images'      => 'nullable|array',
-            'images.*'    => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'title'        => 'required|string|max:255',
+            'description'  => 'required|string',
+            'service_type' => 'required|in:remote,presential',
+            'city'         => 'nullable|string|max:100',
+            'images'       => 'nullable|array',
+            'images.*'     => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }
 
@@ -40,12 +41,14 @@ class StoreServiceCaseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required'       => 'El título es obligatorio.',
-            'description.required' => 'La descripción es obligatoria.',
-            'images.array'         => 'Las imágenes deben enviarse como una lista.',
-            'images.*.image'       => 'El archivo debe ser una imagen.',
-            'images.*.mimes'       => 'La imagen debe ser jpeg, png, jpg o webp.',
-            'images.*.max'         => 'La imagen no debe superar los 2 MB.',
+            'title.required'        => 'El título es obligatorio.',
+            'description.required'  => 'La descripción es obligatoria.',
+            'service_type.required' => 'El tipo de asistencia es obligatorio.',
+            'service_type.in'       => 'El tipo de asistencia debe ser remoto o presencial.',
+            'images.array'          => 'Las imágenes deben enviarse como una lista.',
+            'images.*.image'        => 'El archivo debe ser una imagen.',
+            'images.*.mimes'        => 'La imagen debe ser jpeg, png, jpg o webp.',
+            'images.*.max'          => 'La imagen no debe superar los 2 MB.',
         ];
     }
 

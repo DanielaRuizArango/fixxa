@@ -32,11 +32,12 @@ class ServiceCaseController extends Controller
 
             // Crear el caso
             $serviceCase = ServiceCase::create([
-                'client_id'   => $client->id,
-                'title'       => $validatedData['title'],
-                'description' => $validatedData['description'],
-                'city'        => $validatedData['city'] ?? $request->user()->city,
-                'status'      => 'active',
+                'client_id'    => $client->id,
+                'title'        => $validatedData['title'],
+                'description'  => $validatedData['description'],
+                'service_type' => $validatedData['service_type'],
+                'city'         => $validatedData['city'] ?? $request->user()->city,
+                'status'       => 'active',
             ]);
 
             // Guardar imágenes si fueron enviadas
@@ -127,15 +128,17 @@ class ServiceCaseController extends Controller
             }
 
             $validatedData = $request->validate([
-                'title'       => 'required|string|max:255',
-                'description' => 'required|string',
-                'city'        => 'nullable|string|max:255',
+                'title'        => 'required|string|max:255',
+                'description'  => 'required|string',
+                'service_type' => 'required|in:remote,presential',
+                'city'         => 'nullable|string|max:255',
             ]);
 
             $serviceCase->update([
-                'title'       => $validatedData['title'],
-                'description' => $validatedData['description'],
-                'city'        => $validatedData['city'] ?? $serviceCase->city,
+                'title'        => $validatedData['title'],
+                'description'  => $validatedData['description'],
+                'service_type' => $validatedData['service_type'],
+                'city'         => $validatedData['city'] ?? $serviceCase->city,
             ]);
 
             // Guardar nuevas imágenes si fueron enviadas

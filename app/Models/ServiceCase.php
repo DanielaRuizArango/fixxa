@@ -16,6 +16,7 @@ class ServiceCase extends Model
         'client_id',
         'title',
         'description',
+        'service_type',
         'city',
         'status',
         'accepted_technician_id',
