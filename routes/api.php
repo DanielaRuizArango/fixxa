@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Client\ServiceCaseController as ClientServiceCaseCo
 use App\Http\Controllers\Api\Technician\AuthController as TechnicianAuthController;
 use App\Http\Controllers\Api\Technician\CaseResponseController;
 use App\Http\Controllers\Api\Technician\ProfileController as TechnicianProfileController;
+use App\Http\Controllers\Api\Technician\TechnicianAssetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -86,6 +87,11 @@ Route::prefix('technician')->group(function () {
             ]);
         });
 
+        // Activos del técnico (Herramientas, Certificaciones, Trabajos)
+        Route::get('/assets', [TechnicianAssetController::class, 'index']);
+        Route::post('/assets', [TechnicianAssetController::class, 'store']);
+        Route::delete('/assets/{id}', [TechnicianAssetController::class, 'destroy']);
+
         Route::post('/logout', [TechnicianAuthController::class, 'logout']);
     });
 });
@@ -118,6 +124,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
         Route::get('cases', [App\Http\Controllers\Admin\ServiceCaseController::class, 'index']);
         Route::get('cases/{id}', [App\Http\Controllers\Admin\ServiceCaseController::class, 'show']);
         Route::patch('cases/{id}/status', [App\Http\Controllers\Admin\ServiceCaseController::class, 'updateStatus']);
+
+        // Alertas de Sistema
+        Route::get('alerts', [App\Http\Controllers\Admin\SystemAlertController::class, 'index']);
     });
 });
 

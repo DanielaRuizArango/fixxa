@@ -30,6 +30,8 @@ class User extends Authenticatable
         'id_number',
         'image',
         'status',
+        'latitude',
+        'longitude',
     ];
 
     /**
