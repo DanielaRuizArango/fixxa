@@ -58,6 +58,26 @@ class ClientController extends Controller
     }
 
     /**
+     * Display the specified client.
+     */
+    public function show($id)
+    {
+        try {
+            $user = User::role('client')->with(['client.serviceCases'])->findOrFail($id);
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Client not found'
+            ], 404);
+        }
+    }
+
+    /**
      * Store a newly created client.
      */
     public function store(Request $request)

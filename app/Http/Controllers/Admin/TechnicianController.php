@@ -63,6 +63,31 @@ class TechnicianController extends Controller
     }
 
     /**
+     * Display the specified technician.
+     */
+    public function show($id)
+    {
+        try {
+            $technician = Technician::with([
+                'user',
+                'ratings.client.user',
+                'caseResponses.serviceCase',
+                'assets'
+            ])->findOrFail($id);
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => $technician
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Technician not found'
+            ], 404);
+        }
+    }
+
+    /**
      * Store a newly created technician.
      */
     public function store(Request $request)
