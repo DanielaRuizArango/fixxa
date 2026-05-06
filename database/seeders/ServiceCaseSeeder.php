@@ -23,9 +23,9 @@ class ServiceCaseSeeder extends Seeder
             return;
         }
 
-        // Cada cliente tiene 2 casos creados
+        // Cada cliente tiene 3 casos creados
         foreach ($clients as $client) {
-            for ($i = 1; $i <= 2; $i++) {
+            for ($i = 1; $i <= 3; $i++) {
                 ServiceCase::create([
                     'client_id' => $client->id,
                     'title' => "Problema con mi equipo - " . $client->user->name . " #$i",
@@ -39,18 +39,23 @@ class ServiceCaseSeeder extends Seeder
 
         // Obtener todos los casos creados
         $allCases = ServiceCase::all();
+        $caseQueue = $allCases->shuffle();
+        $caseIndex = 0;
+        $totalCases = $caseQueue->count();
 
-        // Cada técnico ha respondido de a dos casos
+        // Cada técnico ha respondido de a cuatro casos
         foreach ($technicians as $technician) {
-            // Seleccionar 2 casos aleatorios para que el técnico responda
-            // Usamos shuffle() y take(2) para asegurar variedad
-            $casesToRespond = $allCases->shuffle()->take(2);
+            // Seleccionar 4 casos para que el técnico responda
+            // Para asegurar que todos los casos tengan al menos una respuesta,
+            // recorremos la lista de casos de forma circular.
+            for ($i = 0; $i < 4; $i++) {
+                $case = $caseQueue[$caseIndex % $totalCases];
+                $caseIndex++;
 
-            foreach ($casesToRespond as $case) {
                 CaseResponse::create([
                     'service_case_id' => $case->id,
                     'technician_id' => $technician->id,
-                    'estimated_cost' => rand(80, 250) * 1000, // Precios entre 80k y 250k
+                    'estimated_cost' => rand(80, 250) * 1000,
                     'questions' => "¿Podría indicarme el modelo exacto? ¿El equipo ha sido manipulado anteriormente? Quedo atento a su respuesta.",
                 ]);
 
@@ -61,6 +66,6 @@ class ServiceCaseSeeder extends Seeder
             }
         }
 
-        $this->command->info('ServiceCaseSeeder ejecutado con éxito: 2 casos por cliente y 2 respuestas por técnico.');
+        $this->command->info('ServiceCaseSeeder ejecutado con éxito: 3 casos por cliente y 4 respuestas por técnico.');
     }
 }

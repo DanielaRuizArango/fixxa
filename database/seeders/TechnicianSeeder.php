@@ -38,9 +38,9 @@ class TechnicianSeeder extends Seeder
             ]
         );
 
-        // ── 50 técnicos aleatorios ──────────────────────────────────────────
+        // ── 75 técnicos aleatorios ──────────────────────────────────────────
         User::factory()
-            ->count(50)
+            ->count(75)
             ->technician()
             ->create();
     }
