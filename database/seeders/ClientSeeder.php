@@ -34,9 +34,9 @@ class ClientSeeder extends Seeder
             ['user_id' => $client->id]
         );
 
-        // ── 5 clientes aleatorios ───────────────────────────────────────────
+        // ── 100 clientes aleatorios ─────────────────────────────────────────
         User::factory()
-            ->count(5)
+            ->count(100)
             ->client()
             ->create();
     }

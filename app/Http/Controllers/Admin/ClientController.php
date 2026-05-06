@@ -41,7 +41,7 @@ class ClientController extends Controller
                 $query->where('status', $request->status);
             }
 
-            $clients = $query->paginate(10);
+            $clients = $query->paginate(50);
             
             return response()->json([
                 'status' => 'success',

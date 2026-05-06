@@ -104,11 +104,11 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->status === 'blocked') {
-            Log::warning('Intento de inicio de sesión de usuario bloqueado', ['user_id' => $user->id, 'email' => $user->email]);
+        if ($user->status !== 'active') {
+            Log::warning('Intento de inicio de sesión de usuario no activo', ['user_id' => $user->id, 'email' => $user->email, 'status' => $user->status]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Your account is blocked. Please contact support.',
+                'message' => 'Tu cuenta no está activa. Por favor, contacta al soporte.',
             ], 403);
         }
 

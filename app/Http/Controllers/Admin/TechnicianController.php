@@ -46,7 +46,7 @@ class TechnicianController extends Controller
                 });
             }
 
-            $technicians = $query->paginate(10);
+            $technicians = $query->paginate(50);
             
             return response()->json([
                 'status' => 'success',

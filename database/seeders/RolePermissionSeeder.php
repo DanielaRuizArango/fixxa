@@ -78,7 +78,6 @@ class RolePermissionSeeder extends Seeder
         if ($firstUser) {
             $firstUser->roles()->detach();
             $firstUser->assignRole('super_admin');
-            $firstUser->role = 'admin'; // Maintain existing role column structure
             $firstUser->save();
         }
     }
