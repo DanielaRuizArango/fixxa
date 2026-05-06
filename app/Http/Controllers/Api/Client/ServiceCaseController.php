@@ -37,6 +37,8 @@ class ServiceCaseController extends Controller
                 'description'  => $validatedData['description'],
                 'service_type' => $validatedData['service_type'],
                 'city'         => $validatedData['city'] ?? $request->user()->city,
+                'latitude'     => $validatedData['latitude'] ?? null,
+                'longitude'    => $validatedData['longitude'] ?? null,
                 'status'       => 'active',
             ]);
 
@@ -151,6 +153,8 @@ class ServiceCaseController extends Controller
                 'description'  => 'required|string',
                 'service_type' => 'required|in:remote,presential',
                 'city'         => 'nullable|string|max:255',
+                'latitude'     => 'nullable|numeric|between:-90,90',
+                'longitude'    => 'nullable|numeric|between:-180,180',
             ]);
 
             $serviceCase->update([
@@ -158,6 +162,8 @@ class ServiceCaseController extends Controller
                 'description'  => $validatedData['description'],
                 'service_type' => $validatedData['service_type'],
                 'city'         => $validatedData['city'] ?? $serviceCase->city,
+                'latitude'     => $validatedData['latitude'] ?? $serviceCase->latitude,
+                'longitude'    => $validatedData['longitude'] ?? $serviceCase->longitude,
             ]);
 
             // Guardar nuevas imágenes si fueron enviadas

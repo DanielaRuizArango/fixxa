@@ -30,6 +30,8 @@ class StoreServiceCaseRequest extends FormRequest
             'description'  => 'required|string',
             'service_type' => 'required|in:remote,presential',
             'city'         => 'nullable|string|max:100',
+            'latitude'     => 'nullable|numeric|between:-90,90',
+            'longitude'    => 'nullable|numeric|between:-180,180',
             'images'       => 'nullable|array',
             'images.*'     => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
