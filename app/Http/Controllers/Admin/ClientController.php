@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Utils\AuditLogger;
 
 class ClientController extends Controller
 {
@@ -176,8 +177,18 @@ class ClientController extends Controller
         try {
             $user = User::role('client')->findOrFail($id);
             
+            $oldStatus = $user->status;
             $user->status = ($user->status === 'active') ? 'blocked' : 'active';
             $user->save();
+
+            AuditLogger::log(
+                ($user->status === 'blocked' ? 'block_client' : 'unblock_client'),
+                'User',
+                $user->id,
+                ($user->status === 'blocked' ? "Bloqueó al cliente {$user->name}" : "Desbloqueó al cliente {$user->name}"),
+                ['status' => $oldStatus],
+                ['status' => $user->status]
+            );
 
             return response()->json([
                 'status' => 'success',
@@ -207,6 +218,14 @@ class ClientController extends Controller
             }
 
             $user->delete();
+
+            AuditLogger::log(
+                'delete_client',
+                'User',
+                $id,
+                "Eliminó permanentemente al cliente {$user->name}",
+                ['name' => $user->name, 'email' => $user->email]
+            );
 
             return response()->json([
                 'status' => 'success',

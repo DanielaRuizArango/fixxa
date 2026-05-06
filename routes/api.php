@@ -95,6 +95,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
     // Perfil del admin (todos)
     Route::get('/me', [App\Http\Controllers\Admin\ProfileController::class, 'show']);
     Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update']);
+    Route::get('/dashboard/metrics', [\App\Http\Controllers\Admin\DashboardController::class, 'getMetrics']);
 
     // Gestión de otros admins (solo super_admin)
     Route::middleware('role:super_admin')->group(function () {

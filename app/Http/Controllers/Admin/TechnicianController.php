@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Utils\AuditLogger;
 
 class TechnicianController extends Controller
 {
@@ -202,8 +203,18 @@ class TechnicianController extends Controller
         try {
             $user = User::role('technician')->findOrFail($id);
             
+            $oldStatus = $user->status;
             $user->status = ($user->status === 'active') ? 'blocked' : 'active';
             $user->save();
+
+            AuditLogger::log(
+                ($user->status === 'blocked' ? 'block_technician' : 'unblock_technician'),
+                'User',
+                $user->id,
+                ($user->status === 'blocked' ? "Bloqueó al técnico {$user->name}" : "Desbloqueó al técnico {$user->name}"),
+                ['status' => $oldStatus],
+                ['status' => $user->status]
+            );
 
             return response()->json([
                 'status' => 'success',
@@ -233,6 +244,14 @@ class TechnicianController extends Controller
             }
 
             $user->delete();
+
+            AuditLogger::log(
+                'delete_technician',
+                'User',
+                $id,
+                "Eliminó permanentemente al técnico {$user->name}",
+                ['name' => $user->name, 'email' => $user->email]
+            );
 
             return response()->json([
                 'status' => 'success',
