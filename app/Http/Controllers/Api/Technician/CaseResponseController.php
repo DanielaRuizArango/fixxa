@@ -99,8 +99,20 @@ class CaseResponseController extends Controller
             $query->where('city', 'LIKE', "%{$request->city}%");
         }
 
-        // Filtro por radio (Cercanía)
-        if ($request->filled('radius') && $request->filled('lat') && $request->filled('lng')) {
+        // Ordenamiento
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+
+        if ($sortBy === 'responses_count') {
+            $query->withCount('responses')->orderBy('responses_count', $sortOrder);
+        } elseif ($sortBy === 'client_name') {
+            $query->join('clients', 'service_cases.client_id', '=', 'clients.id')
+                  ->join('users', 'clients.user_id', '=', 'users.id')
+                  ->select('service_cases.*')
+                  ->orderBy('users.name', $sortOrder);
+        } elseif ($sortBy === 'city') {
+            $query->orderBy('city', $sortOrder);
+        } elseif ($request->filled('radius') && $request->filled('lat') && $request->filled('lng')) {
             $lat = $request->lat;
             $lng = $request->lng;
             $radius = $request->radius; // En kilómetros
@@ -110,7 +122,7 @@ class CaseResponseController extends Controller
                   ->having('distance', '<=', $radius)
                   ->orderBy('distance');
         } else {
-            $query->latest();
+            $query->orderBy($sortBy, $sortOrder);
         }
 
         $cases = $query->paginate(10);

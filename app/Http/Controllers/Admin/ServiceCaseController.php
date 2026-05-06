@@ -41,7 +41,27 @@ class ServiceCaseController extends Controller
                 $query->where('service_type', $request->service_type);
             }
 
-            $cases = $query->orderBy('created_at', 'desc')->paginate(10);
+            // Ordenamiento
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+
+            if ($sortBy === 'responses_count') {
+                $query->withCount('responses')->orderBy('responses_count', $sortOrder);
+            } elseif ($sortBy === 'client_name') {
+                $query->join('clients', 'service_cases.client_id', '=', 'clients.id')
+                      ->join('users', 'clients.user_id', '=', 'users.id')
+                      ->select('service_cases.*')
+                      ->orderBy('users.name', $sortOrder);
+            } elseif ($sortBy === 'technician_name') {
+                $query->leftJoin('technicians', 'service_cases.accepted_technician_id', '=', 'technicians.id')
+                      ->leftJoin('users', 'technicians.user_id', '=', 'users.id')
+                      ->select('service_cases.*')
+                      ->orderBy('users.name', $sortOrder);
+            } else {
+                $query->orderBy($sortBy, $sortOrder);
+            }
+
+            $cases = $query->paginate(10);
 
             return response()->json([
                 'status' => 'success',
