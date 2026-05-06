@@ -32,8 +32,10 @@ class UpdateProfileRequest extends FormRequest
             'address'    => 'required|string|max:255',
             'city'       => 'required|string|max:50',
             'experience' => 'required|string|max:2000',
-            'title'      => 'required|string|max:255',
-            'image'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'title'        => 'required|string|max:255',
+            'is_available'  => 'nullable|boolean',
+            'working_hours' => 'nullable|string|max:255',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ];
     }
 

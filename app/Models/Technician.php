@@ -15,6 +15,12 @@ class Technician extends Model
         'user_id',
         'experience',
         'title',
+        'is_available',
+        'working_hours',
+    ];
+
+    protected $casts = [
+        'is_available' => 'boolean',
     ];
 
     /**

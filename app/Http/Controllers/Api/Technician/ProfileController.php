@@ -58,8 +58,10 @@ class ProfileController extends Controller
         // Actualizar datos de perfil del técnico
         $technician = $user->technician;
         $technician->update([
-            'experience' => $validatedData['experience'],
-            'title'      => $validatedData['title'],
+            'experience'   => $validatedData['experience'],
+            'title'         => $validatedData['title'],
+            'is_available'  => $request->has('is_available') ? (bool)$validatedData['is_available'] : $technician->is_available,
+            'working_hours' => $validatedData['working_hours'] ?? $technician->working_hours,
         ]);
 
         return response()->json([
