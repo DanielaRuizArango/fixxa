@@ -21,6 +21,8 @@ Route::post('/login', [App\Http\Controllers\Api\AuthController::class, 'login'])
 Route::post('/forgot-password', [App\Http\Controllers\Api\AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [App\Http\Controllers\Api\AuthController::class, 'resetPassword']);
 
+Route::middleware('auth:sanctum')->get('/technicians/{id}/profile', [\App\Http\Controllers\Api\PublicTechnicianController::class, 'show']);
+
 /*
 |--------------------------------------------------------------------------
 | Rutas de Cliente
