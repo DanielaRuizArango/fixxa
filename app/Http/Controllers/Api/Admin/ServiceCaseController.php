@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ServiceCase;
+use App\Http\Requests\Api\Admin\UpdateCaseStatusRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -101,12 +102,8 @@ class ServiceCaseController extends Controller
     /**
      * Update the status of a service case.
      */
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(UpdateCaseStatusRequest $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:active,pending,responded,resolved,cancelled'
-        ]);
-
         try {
             $case = ServiceCase::findOrFail($id);
             $case->status = $request->status;

@@ -1,106 +1,99 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Client;
+use App\Models\Technician;
+use App\Http\Requests\Api\Admin\StoreTechnicianRequest;
+use App\Http\Requests\Api\Admin\UpdateTechnicianRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Utils\AuditLogger;
 
-class ClientController extends Controller
+class TechnicianController extends Controller
 {
     /**
-     * Display a listing of clients.
+     * Display a listing of technicians.
      */
     public function index(Request $request)
     {
         try {
-            $query = User::role('client')->with('client');
+            $query = Technician::with(['user', 'ratings']);
 
-            // Búsqueda por nombre, email o número de identificación
+            // Búsqueda por nombre, email o número de identificación del usuario asociado
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->where(function($q) use ($search) {
+                $query->whereHas('user', function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
                       ->orWhere('id_number', 'like', "%{$search}%");
                 });
             }
 
-            // Filtro por ciudad
+            // Filtro por ciudad del usuario
             if ($request->has('city') && $request->city != '') {
-                $query->where('city', $request->city);
+                $query->whereHas('user', function($q) use ($request) {
+                    $q->where('city', $request->city);
+                });
             }
 
-            // Filtro por estado
+            // Filtro por estado del usuario
             if ($request->has('status') && $request->status != '') {
-                $query->where('status', $request->status);
+                $query->whereHas('user', function($q) use ($request) {
+                    $q->where('status', $request->status);
+                });
             }
 
-            $clients = $query->paginate(50);
+            $technicians = $query->paginate(50);
             
             return response()->json([
                 'status' => 'success',
-                'data' => $clients
+                'data' => $technicians
             ]);
         } catch (\Exception $e) {
-            Log::error('Error listing clients: ' . $e->getMessage());
+            Log::error('Error listing technicians: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to list clients'
+                'message' => 'Failed to list technicians'
             ], 500);
         }
     }
 
     /**
-     * Display the specified client.
+     * Display the specified technician.
      */
     public function show($id)
     {
         try {
-            $user = User::role('client')->with(['client.serviceCases'])->findOrFail($id);
+            $technician = Technician::with([
+                'user',
+                'ratings.client.user',
+                'caseResponses.serviceCase',
+                'assets'
+            ])->findOrFail($id);
             
             return response()->json([
                 'status' => 'success',
-                'data' => $user
+                'data' => $technician
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Client not found'
+                'message' => 'Technician not found'
             ], 404);
         }
     }
 
     /**
-     * Store a newly created client.
+     * Store a newly created technician.
      */
-    public function store(Request $request)
+    public function store(StoreTechnicianRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'phone' => 'required|string|max:20',
-            'city' => 'required|string|max:50',
-            'address' => 'required|string|max:255',
-            'type_id' => 'required|string|max:20',
-            'id_number' => 'required|string|max:20|unique:users',
-            'image' => 'nullable|image|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
+        DB::beginTransaction();
         try {
             $imagePath = null;
             if ($request->hasFile('image')) {
@@ -120,51 +113,41 @@ class ClientController extends Controller
                 'status' => 'active',
             ]);
 
-            $user->assignRole('client');
+            $user->assignRole('technician');
 
-            Client::create(['user_id' => $user->id]);
+            Technician::create([
+                'user_id' => $user->id,
+                'experience' => $request->experience,
+                'title' => $request->title,
+            ]);
+
+            DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Client created successfully',
-                'data' => $user->load('client')
+                'message' => 'Technician created successfully',
+                'data' => $user->load('technician')
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('Error creating client: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error creating technician: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to create client'
+                'message' => 'Failed to create technician'
             ], 500);
         }
     }
 
     /**
-     * Update the specified client.
+     * Update the specified technician.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateTechnicianRequest $request, $id)
     {
         try {
-            $user = User::role('client')->findOrFail($id);
+            $user = User::role('technician')->findOrFail($id);
 
-            $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|string|max:255',
-                'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
-                'phone' => 'sometimes|string|max:20',
-                'city' => 'sometimes|string|max:50',
-                'address' => 'sometimes|string|max:255',
-                'type_id' => 'sometimes|string|max:20',
-                'id_number' => 'sometimes|string|max:20|unique:users,id_number,' . $user->id,
-                'image' => 'nullable|image|max:2048',
-                'status' => 'sometimes|in:active,blocked',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+            DB::beginTransaction();
 
             if ($request->hasFile('image')) {
                 if ($user->image) {
@@ -175,63 +158,70 @@ class ClientController extends Controller
 
             $user->update($request->only(['name', 'email', 'phone', 'city', 'address', 'type_id', 'id_number', 'status']));
 
+            if ($request->has('experience') || $request->has('title')) {
+                $user->technician->update($request->only(['experience', 'title']));
+            }
+
+            DB::commit();
+
             return response()->json([
                 'status' => 'success',
-                'message' => 'Client updated successfully',
-                'data' => $user->load('client')
+                'message' => 'Technician updated successfully',
+                'data' => $user->load('technician')
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating client: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error updating technician: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to update client'
+                'message' => 'Failed to update technician'
             ], 500);
         }
     }
 
     /**
-     * Block/unblock a client.
+     * Block/unblock a technician.
      */
     public function block($id)
     {
         try {
-            $user = User::role('client')->findOrFail($id);
+            $user = User::role('technician')->findOrFail($id);
             
             $oldStatus = $user->status;
             $user->status = ($user->status === 'active') ? 'blocked' : 'active';
             $user->save();
 
             AuditLogger::log(
-                ($user->status === 'blocked' ? 'block_client' : 'unblock_client'),
+                ($user->status === 'blocked' ? 'block_technician' : 'unblock_technician'),
                 'User',
                 $user->id,
-                ($user->status === 'blocked' ? "Bloqueó al cliente {$user->name}" : "Desbloqueó al cliente {$user->name}"),
+                ($user->status === 'blocked' ? "Bloqueó al técnico {$user->name}" : "Desbloqueó al técnico {$user->name}"),
                 ['status' => $oldStatus],
                 ['status' => $user->status]
             );
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Client status updated successfully',
+                'message' => 'Technician status updated successfully',
                 'data' => $user
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error blocking/unblocking client: ' . $e->getMessage());
+            Log::error('Error blocking/unblocking technician: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to update client status'
+                'message' => 'Failed to update technician status'
             ], 500);
         }
     }
 
     /**
-     * Remove the specified client.
+     * Remove the specified technician.
      */
     public function destroy($id)
     {
         try {
-            $user = User::role('client')->findOrFail($id);
+            $user = User::role('technician')->findOrFail($id);
             
             if ($user->image) {
                 Storage::disk('public')->delete($user->image);
@@ -240,22 +230,22 @@ class ClientController extends Controller
             $user->delete();
 
             AuditLogger::log(
-                'delete_client',
+                'delete_technician',
                 'User',
                 $id,
-                "Eliminó permanentemente al cliente {$user->name}",
+                "Eliminó permanentemente al técnico {$user->name}",
                 ['name' => $user->name, 'email' => $user->email]
             );
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Client deleted successfully'
+                'message' => 'Technician deleted successfully'
             ]);
         } catch (\Exception $e) {
-            Log::error('Error deleting client: ' . $e->getMessage());
+            Log::error('Error deleting technician: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to delete client'
+                'message' => 'Failed to delete technician'
             ], 500);
         }
     }

@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Admin;
+use App\Http\Requests\Api\Admin\StoreAdminRequest;
+use App\Http\Requests\Api\Admin\UpdateAdminRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -37,28 +38,8 @@ class AdminController extends Controller
     /**
      * Store a newly created admin user.
      */
-    public function store(Request $request)
+    public function store(StoreAdminRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'phone' => 'nullable|string|max:20',
-            'city' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'type_id' => 'nullable|string|max:20',
-            'id_number' => 'nullable|string|max:20|unique:users',
-            'image' => 'nullable|image|max:2048',
-            'spatie_role' => 'nullable|string'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         DB::beginTransaction();
         try {
             $imagePath = null;
@@ -129,32 +110,10 @@ class AdminController extends Controller
     /**
      * Update the specified admin user.
      */
-    public function update(Request $request, $id)
+    public function update(UpdateAdminRequest $request, $id)
     {
         try {
             $user = User::role(['super_admin', 'admin', 'moderator'])->findOrFail($id);
-
-            // Avoid self-lock or self-status-change if necessary
-            // Or maybe allow it for certain admins. For now, just allow admin management.
-
-            $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|string|max:255',
-                'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
-                'phone' => 'sometimes|string|max:20',
-                'city' => 'sometimes|string|max:50',
-                'address' => 'sometimes|string|max:255',
-                'type_id' => 'sometimes|string|max:20',
-                'id_number' => 'sometimes|string|max:20|unique:users,id_number,' . $user->id,
-                'image' => 'nullable|image|max:2048',
-                'status' => 'sometimes|in:active,blocked',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
 
             if ($request->hasFile('image')) {
                 if ($user->image) {

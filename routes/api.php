@@ -95,35 +95,35 @@ Route::prefix('technician')->group(function () {
 */
 Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|moderator'])->group(function () {
     // Perfil del admin (todos)
-    Route::get('/me', [App\Http\Controllers\Admin\ProfileController::class, 'show']);
-    Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update']);
-    Route::get('/dashboard/metrics', [\App\Http\Controllers\Admin\DashboardController::class, 'getMetrics']);
+    Route::get('/me', [\App\Http\Controllers\Api\Admin\ProfileController::class, 'show']);
+    Route::post('/profile', [\App\Http\Controllers\Api\Admin\ProfileController::class, 'update']);
+    Route::get('/dashboard/metrics', [\App\Http\Controllers\Api\Admin\DashboardController::class, 'getMetrics']);
 
     // Gestión de otros admins (solo super_admin)
     Route::middleware('role:super_admin')->group(function () {
-        Route::apiResource('admins', App\Http\Controllers\Admin\AdminController::class);
-        Route::patch('admins/{id}/block', [App\Http\Controllers\Admin\AdminController::class, 'block']);
+        Route::apiResource('admins', \App\Http\Controllers\Api\Admin\AdminController::class);
+        Route::patch('admins/{id}/block', [\App\Http\Controllers\Api\Admin\AdminController::class, 'block']);
     });
 
     // Gestión de clientes y técnicos (super_admin, admin y moderator)
     Route::middleware('role:super_admin|admin|moderator')->group(function () {
-        Route::apiResource('clients', App\Http\Controllers\Admin\ClientController::class);
-        Route::patch('clients/{id}/block', [App\Http\Controllers\Admin\ClientController::class, 'block']);
+        Route::apiResource('clients', \App\Http\Controllers\Api\Admin\ClientController::class);
+        Route::patch('clients/{id}/block', [\App\Http\Controllers\Api\Admin\ClientController::class, 'block']);
         
-        Route::apiResource('technicians', App\Http\Controllers\Admin\TechnicianController::class);
-        Route::patch('technicians/{id}/block', [App\Http\Controllers\Admin\TechnicianController::class, 'block']);
+        Route::apiResource('technicians', \App\Http\Controllers\Api\Admin\TechnicianController::class);
+        Route::patch('technicians/{id}/block', [\App\Http\Controllers\Api\Admin\TechnicianController::class, 'block']);
 
         // Gestión de Casos
-        Route::get('cases', [App\Http\Controllers\Admin\ServiceCaseController::class, 'index']);
-        Route::get('cases/{id}', [App\Http\Controllers\Admin\ServiceCaseController::class, 'show']);
-        Route::patch('cases/{id}/status', [App\Http\Controllers\Admin\ServiceCaseController::class, 'updateStatus']);
+        Route::get('cases', [\App\Http\Controllers\Api\Admin\ServiceCaseController::class, 'index']);
+        Route::get('cases/{id}', [\App\Http\Controllers\Api\Admin\ServiceCaseController::class, 'show']);
+        Route::patch('cases/{id}/status', [\App\Http\Controllers\Api\Admin\ServiceCaseController::class, 'updateStatus']);
 
         // Gestión de Calificaciones
-        Route::get('ratings', [App\Http\Controllers\Admin\RatingController::class, 'index']);
-        Route::delete('ratings/{id}', [App\Http\Controllers\Admin\RatingController::class, 'destroy']);
+        Route::get('ratings', [\App\Http\Controllers\Api\Admin\RatingController::class, 'index']);
+        Route::delete('ratings/{id}', [\App\Http\Controllers\Api\Admin\RatingController::class, 'destroy']);
 
         // Alertas de Sistema
-        Route::get('alerts', [App\Http\Controllers\Admin\SystemAlertController::class, 'index']);
+        Route::get('alerts', [\App\Http\Controllers\Api\Admin\SystemAlertController::class, 'index']);
     });
 });
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\Admin\UpdateAdminProfileRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,26 +25,9 @@ class ProfileController extends Controller
     /**
      * Update the admin's profile.
      */
-    public function update(Request $request)
+    public function update(UpdateAdminProfileRequest $request)
     {
         $user = $request->user();
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'sometimes|string|max:20',
-            'city' => 'sometimes|string|max:50',
-            'address' => 'sometimes|string|max:255',
-            'password' => 'sometimes|string|min:8|confirmed',
-            'image' => 'nullable|image|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
 
         try {
             if ($request->hasFile('image')) {
