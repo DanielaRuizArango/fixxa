@@ -99,6 +99,11 @@ class CaseResponseController extends Controller
             $query->where('city', 'LIKE', "%{$request->city}%");
         }
 
+        // Filtro por tipo de servicio
+        if ($request->filled('service_type')) {
+            $query->where('service_type', $request->service_type);
+        }
+
         // Ordenamiento
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
