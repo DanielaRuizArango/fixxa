@@ -52,17 +52,25 @@ class TechnicianAssetController extends Controller
 
         $path = $request->file('image')->store('technicians/assets', 'public');
 
+        // Certifications require admin approval; other asset types are auto-approved.
+        $status = $request->type === 'certification' ? 'pending' : 'approved';
+
         $asset = TechnicianAsset::create([
             'technician_id' => $technician->id,
-            'type' => $request->type,
-            'image_path' => $path,
-            'description' => $request->description,
+            'type'          => $request->type,
+            'image_path'    => $path,
+            'description'   => $request->description,
+            'status'        => $status,
         ]);
 
+        $message = $request->type === 'certification'
+            ? 'Certificación subida correctamente. Está pendiente de revisión por un administrador.'
+            : 'Asset subido exitosamente.';
+
         return response()->json([
-            'status' => 'success',
-            'message' => 'Asset uploaded successfully',
-            'data' => $asset
+            'status'  => 'success',
+            'message' => $message,
+            'data'    => $asset,
         ], 201);
     }
 

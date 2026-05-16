@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             TechnicianSeeder::class,
             ServiceCaseSeeder::class,
             RatingSeeder::class,
+            CertificationSeeder::class,
         ]);
     }
 }

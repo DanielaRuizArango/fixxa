@@ -124,6 +124,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
 
         // Alertas de Sistema
         Route::get('alerts', [\App\Http\Controllers\Api\Admin\SystemAlertController::class, 'index']);
+
+        // Aprobación de Certificaciones de Técnicos
+        Route::get('certifications', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'index']);
+        Route::patch('certifications/{id}/approve', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'approve']);
+        Route::patch('certifications/{id}/reject', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'reject']);
     });
 });
 

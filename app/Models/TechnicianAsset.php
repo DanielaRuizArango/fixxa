@@ -11,6 +11,14 @@ class TechnicianAsset extends Model
         'type',
         'image_path',
         'description',
+        'status',
+        'reviewed_by',
+        'reviewed_at',
+        'rejection_reason',
+    ];
+
+    protected $casts = [
+        'reviewed_at' => 'datetime',
     ];
 
     /**
@@ -19,5 +27,21 @@ class TechnicianAsset extends Model
     public function technician()
     {
         return $this->belongsTo(Technician::class);
+    }
+
+    /**
+     * Get the admin user who reviewed this asset.
+     */
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /**
+     * Scope to filter only certification assets.
+     */
+    public function scopeCertifications($query)
+    {
+        return $query->where('type', 'certification');
     }
 }

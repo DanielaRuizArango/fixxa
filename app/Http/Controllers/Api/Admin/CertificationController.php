@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Http\Controllers\Api\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\TechnicianAsset;
+use App\Notifications\CertificationReviewed;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class CertificationController extends Controller
+{
+    /**
+     * List all certification assets, filterable by status, paginated.
+     */
+    public function index(Request $request)
+    {
+        $query = TechnicianAsset::certifications()
+            ->with([
+                'technician.user',
+                'reviewer',
+            ]);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $certifications = $query->latest()->paginate(15);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $certifications,
+        ]);
+    }
+
+    /**
+     * Approve a certification asset.
+     */
+    public function approve(Request $request, $id)
+    {
+        $asset = TechnicianAsset::certifications()->findOrFail($id);
+
+        $asset->update([
+            'status'      => 'approved',
+            'reviewed_by' => $request->user()->id,
+            'reviewed_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        // Notify the technician
+        $technicianUser = optional($asset->technician)->user;
+        if ($technicianUser) {
+            $technicianUser->notify(new CertificationReviewed($asset));
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Certificación aprobada correctamente.',
+            'data'    => $asset->fresh(['technician.user', 'reviewer']),
+        ]);
+    }
+
+    /**
+     * Reject a certification asset.
+     */
+    public function reject(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'rejection_reason' => 'required|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $asset = TechnicianAsset::certifications()->findOrFail($id);
+
+        $asset->update([
+            'status'           => 'rejected',
+            'reviewed_by'      => $request->user()->id,
+            'reviewed_at'      => now(),
+            'rejection_reason' => $request->rejection_reason,
+        ]);
+
+        // Notify the technician
+        $technicianUser = optional($asset->technician)->user;
+        if ($technicianUser) {
+            $technicianUser->notify(new CertificationReviewed($asset));
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Certificación rechazada correctamente.',
+            'data'    => $asset->fresh(['technician.user', 'reviewer']),
+        ]);
+    }
+}
