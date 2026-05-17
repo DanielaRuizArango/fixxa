@@ -36,9 +36,20 @@ class DashboardController extends Controller
             ->take(5)
             ->get(['id', 'name', 'email', 'created_at']);
 
-        // 4. Resumen de logs de auditoría recientes
-        $recentLogs = AuditLog::with('admin')
-            ->orderBy('created_at', 'desc')
+        // 4. Resumen de logs de auditoría recientes con filtros de rol
+        $user = auth()->user();
+        $query = AuditLog::with('admin');
+
+        if ($user && !$user->hasRole('super_admin')) {
+            // Solo muestra los logs cuyos actores tengan rol de cliente o técnico (excluyendo administradores)
+            $query->whereHas('admin', function ($q) {
+                $q->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->whereIn('name', ['client', 'technician']);
+                });
+            });
+        }
+
+        $recentLogs = $query->orderBy('created_at', 'desc')
             ->take(10)
             ->get();
 
@@ -62,6 +73,54 @@ class DashboardController extends Controller
                 'completed_services' => $completedServices,
                 'total_users' => User::count(),
             ]
+        ]);
+    }
+
+    /**
+     * Get paginated audit logs for admin panel.
+     */
+    public function getLogs(Request $request)
+    {
+        $user = auth()->user();
+        $query = AuditLog::with('admin');
+
+        // Apply access control based on user role
+        if ($user && !$user->hasRole('super_admin')) {
+            // Non-super-admins can only see client and technician logs
+            $query->whereHas('admin', function ($q) {
+                $q->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->whereIn('name', ['client', 'technician']);
+                });
+            });
+        }
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('admin', function ($adminQ) use ($search) {
+                      $adminQ->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Apply action filter
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        // Apply date filter
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        $logs = $query->orderBy('created_at', 'desc')->paginate(15);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $logs
         ]);
     }
 }

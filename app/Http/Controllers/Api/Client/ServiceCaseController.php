@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 use Illuminate\Support\Facades\Log;
+use App\Utils\AuditLogger;
 
 class ServiceCaseController extends Controller
 {
@@ -54,6 +55,14 @@ class ServiceCaseController extends Controller
             }
 
             Log::info('Caso de servicio creado exitosamente', ['case_id' => $serviceCase->id, 'client_id' => $client->id]);
+
+            // Log action for administrators
+            AuditLogger::log(
+                'create_case',
+                'App\\Models\\ServiceCase',
+                $serviceCase->id,
+                "El cliente {$request->user()->name} creó el caso #{$serviceCase->id}: {$serviceCase->title}."
+            );
 
             return response()->json([
                 'status'  => 'success',
@@ -194,6 +203,14 @@ class ServiceCaseController extends Controller
 
             Log::info('Caso de servicio actualizado exitosamente', ['case_id' => $serviceCase->id, 'client_id' => $client->id]);
 
+            // Log action for administrators
+            AuditLogger::log(
+                'update_case',
+                'App\\Models\\ServiceCase',
+                $serviceCase->id,
+                "El cliente {$request->user()->name} actualizó el caso #{$serviceCase->id}: {$serviceCase->title}."
+            );
+
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Caso de servicio actualizado exitosamente.',
@@ -233,6 +250,14 @@ class ServiceCaseController extends Controller
             $serviceCase->delete();
 
             Log::info('Caso de servicio eliminado exitosamente', ['case_id' => $id, 'client_id' => $client->id]);
+
+            // Log action for administrators
+            AuditLogger::log(
+                'delete_case',
+                'App\\Models\\ServiceCase',
+                $id,
+                "El cliente {$request->user()->name} eliminó el caso #{$id}."
+            );
 
             return response()->json([
                 'status'  => 'success',

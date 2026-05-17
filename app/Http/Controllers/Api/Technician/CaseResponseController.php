@@ -9,6 +9,7 @@ use App\Http\Requests\Api\Technician\StoreCaseResponseRequest;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Log;
+use App\Utils\AuditLogger;
 
 class CaseResponseController extends Controller
 {
@@ -58,6 +59,14 @@ class CaseResponseController extends Controller
                 'technician_id' => $technician->id,
                 'case_id' => $validatedData['service_case_id']
             ]);
+
+            // Log action for administrators
+            AuditLogger::log(
+                'send_proposal',
+                'App\\Models\\CaseResponse',
+                $response->id,
+                "El técnico {$request->user()->name} envió una propuesta de costo estimado \$" . number_format($response->estimated_cost) . " para el caso #{$response->service_case_id}."
+            );
 
             return response()->json([
                 'status'  => 'success',

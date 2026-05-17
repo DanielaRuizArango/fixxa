@@ -7,6 +7,7 @@ use App\Models\TechnicianAsset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Utils\AuditLogger;
 
 class TechnicianAssetController extends Controller
 {
@@ -67,6 +68,14 @@ class TechnicianAssetController extends Controller
             ? 'Certificación subida correctamente. Está pendiente de revisión por un administrador.'
             : 'Asset subido exitosamente.';
 
+        // Log action for administrators
+        AuditLogger::log(
+            'upload_asset',
+            'App\\Models\\TechnicianAsset',
+            $asset->id,
+            "El técnico {$request->user()->name} subió un documento/certificado de tipo '{$asset->type}'."
+        );
+
         return response()->json([
             'status'  => 'success',
             'message' => $message,
@@ -95,6 +104,14 @@ class TechnicianAssetController extends Controller
 
         Storage::disk('public')->delete($asset->image_path);
         $asset->delete();
+
+        // Log action for administrators
+        AuditLogger::log(
+            'delete_asset',
+            'App\\Models\\TechnicianAsset',
+            $id,
+            "El técnico {$request->user()->name} eliminó un documento/certificado."
+        );
 
         return response()->json([
             'status' => 'success',

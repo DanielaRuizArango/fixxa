@@ -9,6 +9,7 @@ use App\Models\Message;
 use App\Models\ServiceCase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Utils\AuditLogger;
 
 class CaseManagementController extends Controller
 {
@@ -82,6 +83,14 @@ class CaseManagementController extends Controller
             }
         }
 
+        // Log action for administrators
+        AuditLogger::log(
+            'accept_proposal',
+            'App\\Models\\ServiceCase',
+            $serviceCase->id,
+            "El cliente {$request->user()->name} aceptó la propuesta del técnico en el caso #{$serviceCase->id}."
+        );
+
         return response()->json([
             'status'      => 'success',
             'message'     => 'Propuesta aceptada.',
@@ -132,6 +141,14 @@ class CaseManagementController extends Controller
             $serviceCase->update(['status' => 'active']);
         }
 
+        // Log action for administrators
+        AuditLogger::log(
+            'reject_proposal',
+            'App\\Models\\ServiceCase',
+            $serviceCase->id,
+            "El cliente {$request->user()->name} rechazó una propuesta en el caso #{$serviceCase->id}."
+        );
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Propuesta rechazada.',
@@ -170,6 +187,14 @@ class CaseManagementController extends Controller
         }
 
         $serviceCase->update(['status' => 'resolved']);
+
+        // Log action for administrators
+        AuditLogger::log(
+            'resolve_case',
+            'App\\Models\\ServiceCase',
+            $serviceCase->id,
+            "El cliente {$request->user()->name} marcó el caso #{$serviceCase->id} como resuelto."
+        );
 
         return response()->json([
             'status'  => 'success',

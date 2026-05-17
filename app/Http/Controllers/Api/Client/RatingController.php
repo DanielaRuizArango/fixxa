@@ -62,6 +62,14 @@ class RatingController extends Controller
             'comment'         => $request->comment,
         ]);
 
+        // Log action for administrators
+        \App\Utils\AuditLogger::log(
+            'submit_rating',
+            'App\\Models\\Rating',
+            $rating->id,
+            "El cliente {$request->user()->name} calificó al técnico con un puntaje de {$rating->score}/5 en el caso #{$serviceCase->id}."
+        );
+
         // Notificar al técnico
         $technicianUser = $serviceCase->acceptedTechnician->user;
         if ($technicianUser) {
