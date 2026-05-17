@@ -23,6 +23,11 @@ class Technician extends Model
         'is_available' => 'boolean',
     ];
 
+    protected $appends = [
+        'average_rating',
+        'ratings_count',
+    ];
+
     /**
      * Get the user that owns the technician profile.
      */
@@ -50,10 +55,18 @@ class Technician extends Model
     /**
      * Get the average rating score for this technician.
      */
-    public function getAverageRatingAttribute(): ?float
+    public function getAverageRatingAttribute(): float
     {
         $avg = $this->ratings()->avg('score');
-        return $avg !== null ? round($avg, 1) : null;
+        return $avg !== null ? round($avg, 1) : 0.0;
+    }
+
+    /**
+     * Get the number of ratings for this technician.
+     */
+    public function getRatingsCountAttribute(): int
+    {
+        return $this->ratings()->count();
     }
     /**
      * Get the assets (tools, certifications, work) for the technician.
