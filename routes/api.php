@@ -76,6 +76,7 @@ Route::prefix('technician')->group(function () {
         Route::get('/cases', [CaseResponseController::class, 'availableCases']);
         Route::get('/cases/{id}', [CaseResponseController::class, 'showCase']);
         Route::post('/responses', [CaseResponseController::class, 'store']);
+        Route::put('/responses/{id}', [CaseResponseController::class, 'update']);
         Route::get('/responses/mine', [CaseResponseController::class, 'myResponses']);
 
         // Calificación promedio del técnico

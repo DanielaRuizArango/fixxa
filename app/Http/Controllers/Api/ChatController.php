@@ -74,11 +74,29 @@ class ChatController extends Controller
              return response()->json(['status' => 'error', 'message' => 'Unauthorized role.'], 403);
         }
 
-        $conversation = Conversation::firstOrCreate([
+        // Buscar si ya existe la conversación
+        $conversation = Conversation::where([
             'service_case_id' => $serviceCase->id,
             'client_id' => $clientId,
             'technician_id' => $technicianId,
-        ]);
+        ])->first();
+
+        if (!$conversation) {
+            // Solo el cliente puede iniciar una nueva conversación
+            if (!$user->hasRole('client')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El chat no ha sido iniciado por el cliente. Solo el cliente puede iniciar la conversación.',
+                ], 403);
+            }
+
+            // Crear la conversación
+            $conversation = Conversation::create([
+                'service_case_id' => $serviceCase->id,
+                'client_id' => $clientId,
+                'technician_id' => $technicianId,
+            ]);
+        }
 
         return response()->json([
             'status' => 'success',

@@ -87,6 +87,73 @@ class CaseResponseController extends Controller
     }
 
     /**
+     * Update an existing case response (proposal) in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $technician = $request->user()->technician;
+            if (!$technician) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'No tienes un perfil de técnico asociado.',
+                ], 403);
+            }
+
+            $response = CaseResponse::where('technician_id', $technician->id)
+                ->findOrFail($id);
+
+            $serviceCase = $response->serviceCase;
+
+            // Lógica de validación:
+            // que pueda editar la propuesta si el cliente no la ha aceptado y el caso no esta resuelto/cancelado
+            if ($serviceCase->accepted_technician_id === $technician->id) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'No puedes editar la propuesta porque ya fue aceptada por el cliente.',
+                ], 403);
+            }
+
+            if (in_array($serviceCase->status, ['resolved', 'cancelled'])) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'No puedes editar la propuesta porque el caso ya está resuelto o cancelado.',
+                ], 403);
+            }
+
+            $request->validate([
+                'estimated_cost' => 'required|numeric|min:0',
+                'questions'      => 'nullable|string',
+            ]);
+
+            $response->update([
+                'estimated_cost' => $request->estimated_cost,
+                'questions'      => $request->questions,
+            ]);
+
+            // Registrar log de auditoría
+            AuditLogger::log(
+                'edit_proposal',
+                'App\\Models\\CaseResponse',
+                $response->id,
+                "El técnico {$request->user()->name} editó su propuesta para el caso #{$response->service_case_id}. Nuevo costo: \$" . number_format($response->estimated_cost) . "."
+            );
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Propuesta actualizada exitosamente.',
+                'data'    => $response->load('serviceCase'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar propuesta: ' . $e->getMessage());
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Error al actualizar la propuesta: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Display a listing of available service cases for technicians.
      */
     public function availableCases(Request $request)
