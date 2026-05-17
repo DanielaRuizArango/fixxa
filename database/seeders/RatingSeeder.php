@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\ServiceCase;
 use App\Models\CaseResponse;
 use App\Models\Rating;
+use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Database\Seeder;
 
 class RatingSeeder extends Seeder
@@ -57,6 +59,36 @@ class RatingSeeder extends Seeder
                     'score'           => rand(4, 5), // Calificaciones mayormente positivas para el demo
                     'comment'         => $comments[array_rand($comments)],
                 ]);
+
+                // Crear conversación entre cliente y técnico para este caso
+                $conversation = Conversation::create([
+                    'service_case_id' => $case->id,
+                    'client_id'       => $case->client_id,
+                    'technician_id'   => $response->technician_id,
+                ]);
+
+                // Obtener ID de usuario del cliente y técnico
+                $clientUserId = $case->client->user_id;
+                $techUserId = $response->technician->user_id;
+
+                // Crear secuencia de chat simulada
+                $chatSequence = [
+                    ['sender_id' => $clientUserId, 'message' => "Hola, he aceptado tu propuesta para reparar mi equipo. ¿Cuándo podrías venir?"],
+                    ['sender_id' => $techUserId, 'message' => "¡Hola! Qué bueno saberlo. Puedo ir hoy mismo por la tarde, tipo 3:00 PM. ¿Te sirve?"],
+                    ['sender_id' => $clientUserId, 'message' => "Sí, perfecto. Esa hora me queda muy bien. Aquí te espero."],
+                    ['sender_id' => $techUserId, 'message' => "Excelente, nos vemos a las 3:00 PM. Saludos."],
+                    ['sender_id' => $techUserId, 'message' => "Ya voy llegando a tu dirección, estoy afuera."],
+                    ['sender_id' => $clientUserId, 'message' => "Listo, ya te abro la puerta. Muchas gracias."],
+                ];
+
+                foreach ($chatSequence as $msgData) {
+                    Message::create([
+                        'conversation_id' => $conversation->id,
+                        'sender_id'       => $msgData['sender_id'],
+                        'message'         => $msgData['message'],
+                        'is_read'         => true,
+                    ]);
+                }
             }
         }
 
