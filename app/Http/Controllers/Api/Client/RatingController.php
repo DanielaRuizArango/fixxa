@@ -10,6 +10,33 @@ use App\Models\ServiceCase;
 class RatingController extends Controller
 {
     /**
+     * Display a listing of ratings given by the client.
+     */
+    public function index(\Illuminate\Http\Request $request)
+    {
+        $client = $request->user()->client;
+
+        if (!$client) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No tienes un perfil de cliente asociado.',
+            ], 403);
+        }
+
+        $ratings = Rating::with(['technician.user', 'serviceCase'])
+            ->whereHas('serviceCase', function ($query) use ($client) {
+                $query->where('client_id', $client->id);
+            })
+            ->latest()
+            ->paginate(15);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $ratings,
+        ]);
+    }
+
+    /**
      * Store a new rating for a resolved service case.
      */
     public function store(StoreRatingRequest $request)

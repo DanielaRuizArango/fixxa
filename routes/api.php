@@ -52,6 +52,7 @@ Route::prefix('client')->group(function () {
         Route::patch('/cases/{caseId}/resolve', [CaseManagementController::class, 'resolveCase']);
 
         // Calificaciones
+        Route::get('/ratings', [RatingController::class, 'index']);
         Route::post('/ratings', [RatingController::class, 'store']);
 
         Route::post('/logout', [ClientAuthController::class, 'logout']);
