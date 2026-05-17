@@ -113,6 +113,18 @@ class CaseResponseController extends Controller
             $query->where('service_type', $request->service_type);
         }
 
+        // Filtro por radio de cercanía (km)
+        if ($request->filled('radius') && $request->filled('lat') && $request->filled('lng')) {
+            $lat = $request->lat;
+            $lng = $request->lng;
+            $radius = $request->radius; // En kilómetros
+
+            // Fórmula Haversine para calcular distancia en SQL con whereRaw (compatible con count() de paginación)
+            $formula = "(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))";
+            $query->whereRaw("{$formula} <= ?", [$lat, $lng, $lat, $radius])
+                  ->selectRaw("service_cases.*, {$formula} AS distance", [$lat, $lng, $lat]);
+        }
+
         // Ordenamiento
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');
@@ -126,17 +138,13 @@ class CaseResponseController extends Controller
                   ->orderBy('users.name', $sortOrder);
         } elseif ($sortBy === 'city') {
             $query->orderBy('city', $sortOrder);
-        } elseif ($request->filled('radius') && $request->filled('lat') && $request->filled('lng')) {
-            $lat = $request->lat;
-            $lng = $request->lng;
-            $radius = $request->radius; // En kilómetros
-
-            // Fórmula Haversine para calcular distancia en SQL
-            $query->selectRaw("*, (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance", [$lat, $lng, $lat])
-                  ->having('distance', '<=', $radius)
-                  ->orderBy('distance');
         } else {
-            $query->orderBy($sortBy, $sortOrder);
+            // Si el filtro de radio está activo y no se especifica otro orden diferente a created_at, ordenar por cercanía (distancia asc)
+            if ($request->filled('radius') && $request->filled('lat') && $request->filled('lng') && $sortBy === 'created_at') {
+                $query->orderBy('distance', 'asc');
+            } else {
+                $query->orderBy($sortBy, $sortOrder);
+            }
         }
 
         $cases = $query->paginate(10);
