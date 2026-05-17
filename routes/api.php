@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->get('/technicians/{id}/profile', [\App\Http\C
 */
 Route::prefix('client')->group(function () {
     Route::post('/register', [ClientAuthController::class, 'register']);
+    Route::post('/login', [ClientAuthController::class, 'login']);
 
     Route::middleware(['auth:sanctum', 'role:client'])->group(function () {
         // Perfil del cliente
@@ -64,6 +65,7 @@ Route::prefix('client')->group(function () {
 */
 Route::prefix('technician')->group(function () {
     Route::post('/register', [TechnicianAuthController::class, 'register']);
+    Route::post('/login', [TechnicianAuthController::class, 'login']);
 
     Route::middleware(['auth:sanctum', 'role:technician'])->group(function () {
         // Perfil del técnico
