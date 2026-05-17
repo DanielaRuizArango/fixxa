@@ -176,9 +176,12 @@ class ServiceCaseController extends Controller
                 'title'        => 'required|string|max:255',
                 'description'  => 'required|string',
                 'service_type' => 'required|in:remote,presential',
-                'city'         => 'nullable|string|max:255',
+                'city'         => 'required|string|in:Manizales,manizales',
                 'latitude'     => 'nullable|numeric|between:-90,90',
                 'longitude'    => 'nullable|numeric|between:-180,180',
+            ], [
+                'city.required' => 'La ciudad es obligatoria.',
+                'city.in'       => 'Por el momento, solo se permiten casos en la ciudad de Manizales.',
             ]);
 
             $serviceCase->update([

@@ -23,11 +23,19 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $colombianCities = [
+            'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena',
+            'Cúcuta', 'Bucaramanga', 'Pereira', 'Santa Marta', 'Ibagué',
+            'Pasto', 'Manizales', 'Neiva', 'Villavicencio', 'Armenia',
+            'Valledupar', 'Montería', 'Sincelejo', 'Popayán', 'Floridablanca',
+            'Palmira', 'Buenaventura', 'Itagüí', 'Envigado', 'Rionegro'
+        ];
+
         return [
             'name'              => fake()->name(),
             'email'             => fake()->unique()->safeEmail(),
             'phone'             => fake()->numerify('3##-###-####'),
-            'city'              => fake()->city(),
+            'city'              => fake()->randomElement($colombianCities),
             'address'           => fake()->address(),
             'type_id'           => 'CC', // Cédula de Ciudadanía
             'id_number'         => fake()->unique()->numerify('##########'),
