@@ -133,12 +133,23 @@ class CaseManagementController extends Controller
             ], 404);
         }
 
+        $wasAccepted = $serviceCase->accepted_technician_id === $response->technician_id;
+
         $response->delete();
 
         // If no more responses remain, revert the case to 'active'
         $remainingResponses = CaseResponse::where('service_case_id', $serviceCase->id)->count();
         if ($remainingResponses === 0) {
-            $serviceCase->update(['status' => 'active']);
+            $serviceCase->update([
+                'status' => 'active',
+                'accepted_technician_id' => null
+            ]);
+        } elseif ($wasAccepted) {
+            // Revert back to responded if there are other proposals
+            $serviceCase->update([
+                'status' => 'responded',
+                'accepted_technician_id' => null
+            ]);
         }
 
         // Log action for administrators
