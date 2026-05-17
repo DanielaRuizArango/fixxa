@@ -77,6 +77,13 @@ class UserFactory extends Factory
                     'Ing. Mecatrónico',
                     'Técnico Electricista',
                 ]),
+                'working_hours' => fake()->randomElement([
+                    'Lunes a Viernes 8:00 AM - 6:00 PM',
+                    'Lunes a Sábado 7:00 AM - 5:00 PM',
+                    'Lunes a Viernes 9:00 AM - 7:00 PM',
+                    '24/7 Emergencias',
+                    'Fines de Semana y Festivos',
+                ]),
             ]);
         });
     }

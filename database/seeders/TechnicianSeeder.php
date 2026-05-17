@@ -33,8 +33,9 @@ class TechnicianSeeder extends Seeder
         \App\Models\Technician::firstOrCreate(
             ['user_id' => $technician->id],
             [
-                'experience' => 'Más de 5 años de experiencia en mantenimiento de equipos electrónicos y de refrigeración.',
-                'title'      => 'Técnico en Refrigeración',
+                'experience'    => 'Más de 5 años de experiencia en mantenimiento de equipos electrónicos y de refrigeración.',
+                'title'         => 'Técnico en Refrigeración',
+                'working_hours' => 'Lunes a Viernes 8:00 AM - 6:00 PM',
             ]
         );
 

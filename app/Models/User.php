@@ -44,6 +44,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'is_online',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -55,6 +59,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get if the user is simulated online or not.
+     */
+    public function getIsOnlineAttribute(): bool
+    {
+        if ($this->id === 1 || $this->email === 'tecnico@fixxa.com') {
+            return true;
+        }
+        return ($this->id % 3) !== 0;
     }
 
     /**
