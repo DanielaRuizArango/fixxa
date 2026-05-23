@@ -199,10 +199,8 @@ class CaseResponseController extends Controller
         if ($sortBy === 'responses_count') {
             $query->withCount('responses')->orderBy('responses_count', $sortOrder);
         } elseif ($sortBy === 'client_name') {
-            $query->join('clients', 'service_cases.client_id', '=', 'clients.id')
-                  ->join('users', 'clients.user_id', '=', 'users.id')
-                  ->select('service_cases.*')
-                  ->orderBy('users.name', $sortOrder);
+            $direction = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+            $query->orderByRaw("(SELECT u.name FROM clients c JOIN users u ON c.user_id = u.id WHERE c.id = service_cases.client_id LIMIT 1) {$direction}");
         } elseif ($sortBy === 'city') {
             $query->orderBy('city', $sortOrder);
         } else {
