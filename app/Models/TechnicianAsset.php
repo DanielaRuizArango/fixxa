@@ -44,4 +44,12 @@ class TechnicianAsset extends Model
     {
         return $query->where('type', 'certification');
     }
+
+    /**
+     * Scope to filter only id_document assets (cédulas).
+     */
+    public function scopeIdDocuments($query)
+    {
+        return $query->where('type', 'id_document');
+    }
 }

@@ -9,6 +9,16 @@ use Illuminate\Database\Seeder;
 class CertificationSeeder extends Seeder
 {
     /**
+     * URL de imagen por defecto para certificados / diplomas.
+     */
+    private string $defaultCertImage = 'https://imgv2-1-f.scribdassets.com/img/document/511686582/original/1045ed1900/1?v=1';
+
+    /**
+     * URL de imagen por defecto para cédulas de identidad.
+     */
+    private string $defaultIdImage = 'https://www.elpais.com.co/resizer/v2/4LID3CTAJ5EKLH2LKQPRNZYS2Y.png?auth=30992a0e2b6dbd6ff7efa7706210504c0f4d8325aa20dc8430cd3019933cfdad&smart=true&quality=75&width=1280&fitfill=false';
+
+    /**
      * Nombres de certificaciones realistas para técnicos de servicios del hogar.
      */
     private array $certificationNames = [
@@ -37,6 +47,14 @@ class CertificationSeeder extends Seeder
         'La imagen no corresponde a un certificado oficial reconocido.',
     ];
 
+    private array $idRejectionReasons = [
+        'La cédula no es legible. Por favor sube una imagen con mayor resolución.',
+        'El documento está vencido o deteriorado.',
+        'Los datos de la cédula no coinciden con la información del perfil.',
+        'La imagen no corresponde a una cédula de ciudadanía válida.',
+        'La cédula presentada es una fotocopia no aceptada. Se requiere el documento original.',
+    ];
+
     public function run(): void
     {
         // Obtener el admin para asignarlo como revisor
@@ -50,35 +68,25 @@ class CertificationSeeder extends Seeder
             return;
         }
 
-        $created = 0;
+        $certCount = 0;
+        $idCount   = 0;
 
         foreach ($technicians as $technician) {
-            // Cada técnico recibe entre 1 y 3 certificaciones
-            $count = rand(1, 3);
-
-            // Seleccionar certificaciones aleatorias sin repetir
+            // ── 1. Certificaciones (1-3 por técnico) ──────────────────────────
+            $count    = rand(1, 3);
             $selected = collect($this->certificationNames)->shuffle()->take($count);
 
             foreach ($selected as $description) {
-                // Distribuir los estados: 50% aprobadas, 30% pendientes, 20% rechazadas
-                $rand = rand(1, 10);
-                if ($rand <= 5) {
-                    $status = 'approved';
-                } elseif ($rand <= 8) {
-                    $status = 'pending';
-                } else {
-                    $status = 'rejected';
-                }
+                $status = $this->randomStatus();
 
                 $data = [
                     'technician_id' => $technician->id,
                     'type'          => 'certification',
-                    'image_path'    => 'technicians/assets/sample_cert_' . rand(1, 5) . '.jpg',
+                    'image_path'    => $this->defaultCertImage,
                     'description'   => $description,
                     'status'        => $status,
                 ];
 
-                // Si fue revisada, agregar datos del revisor
                 if ($status !== 'pending' && $reviewer) {
                     $data['reviewed_by'] = $reviewer->id;
                     $data['reviewed_at'] = now()->subDays(rand(1, 30));
@@ -89,10 +97,49 @@ class CertificationSeeder extends Seeder
                 }
 
                 TechnicianAsset::create($data);
-                $created++;
+                $certCount++;
             }
+
+            // ── 2. Documento de identidad (cédula) — 1 por técnico ────────────
+            $idStatus = $this->randomStatus();
+
+            $idData = [
+                'technician_id' => $technician->id,
+                'type'          => 'id_document',
+                'image_path'    => $this->defaultIdImage,
+                'description'   => 'Cédula de ciudadanía',
+                'status'        => $idStatus,
+            ];
+
+            if ($idStatus !== 'pending' && $reviewer) {
+                $idData['reviewed_by'] = $reviewer->id;
+                $idData['reviewed_at'] = now()->subDays(rand(1, 30));
+
+                if ($idStatus === 'rejected') {
+                    $idData['rejection_reason'] = $this->idRejectionReasons[array_rand($this->idRejectionReasons)];
+                }
+            }
+
+            TechnicianAsset::create($idData);
+            $idCount++;
         }
 
-        $this->command->info("CertificationSeeder: {$created} certificaciones creadas para {$technicians->count()} técnicos.");
+        $this->command->info("CertificationSeeder: {$certCount} certificaciones y {$idCount} cédulas creadas para {$technicians->count()} técnicos.");
+    }
+
+    /**
+     * Distribuye los estados: 50% aprobadas, 30% pendientes, 20% rechazadas.
+     */
+    private function randomStatus(): string
+    {
+        $rand = rand(1, 10);
+
+        if ($rand <= 5) {
+            return 'approved';
+        } elseif ($rand <= 8) {
+            return 'pending';
+        }
+
+        return 'rejected';
     }
 }

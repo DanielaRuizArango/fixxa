@@ -36,7 +36,7 @@ class TechnicianAssetController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'type' => 'required|in:tool,certification,work',
+            'type' => 'required|in:tool,certification,work,id_document',
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'description' => 'nullable|string|max:255',
         ]);
@@ -53,8 +53,8 @@ class TechnicianAssetController extends Controller
 
         $path = $request->file('image')->store('technicians/assets', 'public');
 
-        // Certifications require admin approval; other asset types are auto-approved.
-        $status = $request->type === 'certification' ? 'pending' : 'approved';
+        // Certifications and id_documents require admin approval; other asset types are auto-approved.
+        $status = in_array($request->type, ['certification', 'id_document']) ? 'pending' : 'approved';
 
         $asset = TechnicianAsset::create([
             'technician_id' => $technician->id,

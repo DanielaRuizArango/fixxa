@@ -132,8 +132,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
 
         // Aprobación de Certificaciones de Técnicos
         Route::get('certifications', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'index']);
+        Route::get('certifications/{id}', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'show']);
         Route::patch('certifications/{id}/approve', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'approve']);
         Route::patch('certifications/{id}/reject', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'reject']);
+
+        // Aprobación de Cédulas (id_document)
+        Route::get('id-documents', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'indexIdDocuments']);
+        Route::patch('id-documents/{id}/approve', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'approveIdDocument']);
+        Route::patch('id-documents/{id}/reject', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'rejectIdDocument']);
     });
 });
 
