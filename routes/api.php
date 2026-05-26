@@ -50,6 +50,7 @@ Route::prefix('client')->group(function () {
         Route::post('/cases/{caseId}/proposals/{responseId}/accept', [CaseManagementController::class, 'acceptProposal']);
         Route::delete('/cases/{caseId}/proposals/{responseId}/reject', [CaseManagementController::class, 'rejectProposal']);
         Route::patch('/cases/{caseId}/resolve', [CaseManagementController::class, 'resolveCase']);
+        Route::patch('/cases/{caseId}/cancel', [CaseManagementController::class, 'cancelCase']);
 
         // Calificaciones
         Route::get('/ratings', [RatingController::class, 'index']);

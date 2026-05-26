@@ -213,4 +213,50 @@ class CaseManagementController extends Controller
             'data'    => $serviceCase->load(['images', 'responses.technician.user', 'rating', 'acceptedTechnician.user']),
         ]);
     }
+
+    /**
+     * Cancel a service case.
+     * Allowed when the case is in 'active', 'pending', or 'responded' status.
+     */
+    public function cancelCase(Request $request, $caseId)
+    {
+        $client = $request->user()->client;
+
+        if (!$client) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No tienes un perfil de cliente asociado.',
+            ], 403);
+        }
+
+        $serviceCase = ServiceCase::where('client_id', $client->id)->find($caseId);
+
+        if (!$serviceCase) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'El caso no existe o no te pertenece.',
+            ], 403);
+        }
+
+        if (!in_array($serviceCase->status, ['active', 'pending', 'responded'])) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'No puedes cancelar un caso que ya está resuelto o cancelado.',
+            ], 422);
+        }
+
+        $serviceCase->update(['status' => 'cancelled']);
+
+        AuditLogger::log(
+            'cancel_case',
+            'App\\Models\\ServiceCase',
+            $serviceCase->id,
+            "El cliente {$request->user()->name} canceló el caso #{$serviceCase->id}."
+        );
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Caso cancelado.',
+        ]);
+    }
 }
