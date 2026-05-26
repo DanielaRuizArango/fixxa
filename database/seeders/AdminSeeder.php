@@ -46,6 +46,7 @@ class AdminSeeder extends Seeder
                     'type_id'   => 'CC',
                     'id_number' => 'ID-' . rand(1000, 9999),
                     'status'    => 'active',
+                    'image'     => 'https://api.dicebear.com/9.x/avataaars/svg?seed=' . urlencode($adminData['name']),
                 ]
             );
 

@@ -24,6 +24,7 @@ class ClientSeeder extends Seeder
                 'address'   => 'Calle 10 # 20-30, Bogotá',
                 'type_id'   => 'CC',
                 'id_number' => '1000000001',
+                'image'     => 'https://api.dicebear.com/9.x/avataaars/svg?seed=Cliente%20Demo',
             ]
         );
         // Sincronizar rol Spatie (evita duplicados si se corre de nuevo)

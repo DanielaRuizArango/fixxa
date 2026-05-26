@@ -24,6 +24,7 @@ class TechnicianSeeder extends Seeder
                 'address'   => 'Carrera 5 # 10-15, Medellín',
                 'type_id'   => 'CC',
                 'id_number' => '2000000001',
+                'image'     => 'https://api.dicebear.com/9.x/avataaars/svg?seed=Tecnico%20Demo',
             ]
         );
         // Sincronizar rol Spatie (evita duplicados si se corre de nuevo)

@@ -31,14 +31,17 @@ class UserFactory extends Factory
             'Palmira', 'Buenaventura', 'Itagüí', 'Envigado', 'Rionegro'
         ];
 
+        $name = fake()->name();
+
         return [
-            'name'              => fake()->name(),
+            'name'              => $name,
             'email'             => fake()->unique()->safeEmail(),
             'phone'             => fake()->numerify('3##-###-####'),
             'city'              => fake()->randomElement($colombianCities),
             'address'           => fake()->address(),
             'type_id'           => 'CC', // Cédula de Ciudadanía
             'id_number'         => fake()->unique()->numerify('##########'),
+            'image'             => 'https://api.dicebear.com/9.x/avataaars/svg?seed=' . urlencode($name),
             'email_verified_at' => now(),
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),

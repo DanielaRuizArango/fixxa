@@ -23,17 +23,27 @@ class ServiceCaseSeeder extends Seeder
             return;
         }
 
+        $initialStatuses = ['active', 'pending', 'cancelled'];
         // Cada cliente tiene 3 casos creados
         foreach ($clients as $client) {
             for ($i = 1; $i <= 3; $i++) {
-                ServiceCase::create([
+                $case = ServiceCase::create([
                     'client_id' => $client->id,
                     'title' => "Problema con mi equipo - " . $client->user->name . " #$i",
                     'description' => "Hola, tengo un inconveniente con uno de mis equipos y requiero asistencia técnica profesional. Es el caso número $i que reporto.",
                     'service_type' => $i % 2 == 0 ? 'remote' : 'presential',
                     'city' => $client->user->city,
-                    'status' => 'active',
+                    'status' => $initialStatuses[array_rand($initialStatuses)],
                 ]);
+
+                // Crear 1 o 2 imágenes aleatorias para el caso
+                $numImages = rand(1, 2);
+                for ($j = 0; $j < $numImages; $j++) {
+                    \App\Models\CaseImage::create([
+                        'service_case_id' => $case->id,
+                        'image_path' => 'https://picsum.photos/seed/' . $case->id . '_' . $j . '/800/600',
+                    ]);
+                }
             }
         }
 
@@ -59,9 +69,11 @@ class ServiceCaseSeeder extends Seeder
                     'questions' => "¿Podría indicarme el modelo exacto? ¿El equipo ha sido manipulado anteriormente? Quedo atento a su respuesta.",
                 ]);
 
-                // Cambiar el estado del caso a 'responded'
-                if ($case->status === 'active') {
-                    $case->update(['status' => 'responded']);
+                // Cambiar el estado del caso a 'responded' o 'resolved'
+                if (in_array($case->status, ['active', 'pending'])) {
+                    // Posibilidad de que esté resuelto o simplemente respondido
+                    $newStatus = rand(0, 1) ? 'responded' : 'resolved';
+                    $case->update(['status' => $newStatus]);
                 }
             }
         }
