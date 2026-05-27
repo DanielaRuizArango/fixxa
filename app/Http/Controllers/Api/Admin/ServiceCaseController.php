@@ -16,7 +16,7 @@ class ServiceCaseController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = ServiceCase::with(['client.user', 'responses.technician.user', 'rating', 'acceptedTechnician.user']);
+            $query = ServiceCase::with(['client.user', 'responses.technician.user', 'images', 'rating', 'acceptedTechnician.user']);
 
             // Búsqueda por título o descripción
             if ($request->has('search')) {
