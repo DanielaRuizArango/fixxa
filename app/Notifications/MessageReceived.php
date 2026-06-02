@@ -45,7 +45,7 @@ class MessageReceived extends Notification
             'sender_id'       => $this->sender->id,
             'sender_name'     => $this->sender->name,
             'conversation_id' => $this->message->conversation_id,
-            'text'            => substr($this->message->content, 0, 50) . (strlen($this->message->content) > 50 ? '...' : ''),
+            'text'            => substr($this->message->message, 0, 50) . (strlen($this->message->message) > 50 ? '...' : ''),
             'title'           => 'Nuevo mensaje de ' . $this->sender->name,
         ];
     }

@@ -35,10 +35,7 @@ class ChatController extends Controller
                 ->paginate(10);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $conversations
-        ]);
+        return $this->successResponse($conversations);
     }
 
     /**
@@ -52,7 +49,7 @@ class ChatController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+            return $this->errorResponse('Validation error', 422, $validator->errors());
         }
 
         $user = Auth::user();
@@ -65,13 +62,13 @@ class ChatController extends Controller
             $clientId = $user->client->id;
             $technicianId = $request->technician_id;
             if (!$technicianId) {
-                return response()->json(['status' => 'error', 'message' => 'Technician ID is required for clients.'], 422);
+                return $this->errorResponse('Technician ID is required for clients.', 422);
             }
         } elseif ($user->hasRole('technician')) {
             $technicianId = $user->technician->id;
             $clientId = $serviceCase->client_id;
         } else {
-             return response()->json(['status' => 'error', 'message' => 'Unauthorized role.'], 403);
+             return $this->errorResponse('Unauthorized role.', 403);
         }
 
         // Buscar si ya existe la conversación
@@ -84,10 +81,7 @@ class ChatController extends Controller
         if (!$conversation) {
             // Solo el cliente puede iniciar una nueva conversación
             if (!$user->hasRole('client')) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El chat no ha sido iniciado por el cliente. Solo el cliente puede iniciar la conversación.',
-                ], 403);
+                return $this->errorResponse('El chat no ha sido iniciado por el cliente. Solo el cliente puede iniciar la conversación.', 403);
             }
 
             // Crear la conversación
@@ -98,10 +92,7 @@ class ChatController extends Controller
             ]);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $conversation->load(['technician.user', 'client.user', 'serviceCase'])
-        ]);
+        return $this->successResponse($conversation->load(['technician.user', 'client.user', 'serviceCase']));
     }
 
     /**
@@ -115,7 +106,7 @@ class ChatController extends Controller
         // Check if user belongs to conversation
         if (($user->hasRole('client') && $conversation->client_id !== $user->client->id) ||
             ($user->hasRole('technician') && $conversation->technician_id !== $user->technician->id)) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized Access'], 403);
+            return $this->errorResponse('Unauthorized Access', 403);
         }
 
         // Mark messages as read
@@ -123,12 +114,9 @@ class ChatController extends Controller
             ->where('sender_id', '!=', $user->id)
             ->update(['is_read' => true]);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'conversation' => $conversation->load(['client.user', 'technician.user', 'serviceCase']),
-                'messages' => $conversation->messages()->oldest()->get()
-            ]
+        return $this->successResponse([
+            'conversation' => $conversation->load(['client.user', 'technician.user', 'serviceCase']),
+            'messages' => $conversation->messages()->oldest()->get()
         ]);
     }
 
@@ -138,11 +126,11 @@ class ChatController extends Controller
     public function sendMessage(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'message' => 'required|string',
+            'message' => 'required|string|max:2000',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+            return $this->errorResponse('Validation error', 422, $validator->errors());
         }
 
         $user = Auth::user();
@@ -151,7 +139,7 @@ class ChatController extends Controller
         // Check if user belongs to conversation
         if (($user->hasRole('client') && $conversation->client_id !== $user->client->id) ||
             ($user->hasRole('technician') && $conversation->technician_id !== $user->technician->id)) {
-            return response()->json(['status' => 'error', 'message' => 'Unauthorized Access'], 403);
+            return $this->errorResponse('Unauthorized Access', 403);
         }
 
         $message = Message::create([
@@ -178,10 +166,6 @@ class ChatController extends Controller
 
         broadcast(new \App\Events\MessageSent($message))->toOthers();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Message sent successfully',
-            'data' => $message
-        ], 201);
+        return $this->successResponse($message, null, 201);
     }
 }

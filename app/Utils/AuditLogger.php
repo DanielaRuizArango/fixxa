@@ -22,7 +22,7 @@ class AuditLogger
     public static function log($action, $targetType = null, $targetId = null, $description = null, $oldValues = null, $newValues = null)
     {
         return AuditLog::create([
-            'admin_id'    => Auth::id(),
+            'actor_id'    => Auth::id(),
             'action'      => $action,
             'target_type' => $targetType,
             'target_id'   => $targetId,

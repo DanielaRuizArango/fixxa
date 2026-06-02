@@ -11,7 +11,7 @@ class AuditLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'admin_id',
+        'actor_id',
         'action',
         'target_type',
         'target_id',
@@ -29,8 +29,8 @@ class AuditLog extends Model
     /**
      * Get the admin user who performed the action.
      */
-    public function admin(): BelongsTo
+    public function actor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'admin_id');
+        return $this->belongsTo(User::class, 'actor_id');
     }
 }

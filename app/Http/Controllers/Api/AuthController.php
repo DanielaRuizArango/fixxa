@@ -35,11 +35,7 @@ class AuthController extends Controller
                     'errors' => $validator->errors()->toArray(),
                     'data' => $request->except(['password', 'password_confirmation']),
                 ]);
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation error',
-                    'errors' => $validator->errors(),
-                ], 422);
+                return $this->errorResponse('Validation error', 422, $validator->errors());
             }
 
             $user = User::create([
@@ -52,23 +48,16 @@ class AuthController extends Controller
 
             Log::info('Usuario registrado exitosamente (General)', ['user_id' => $user->id, 'email' => $user->email]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'User registered successfully',
-                'data' => [
-                    'user' => $user,
-                    'access_token' => $token,
-                    'token_type' => 'Bearer',
-                ],
-            ], 201);
+            return $this->successResponse([
+                'user' => $user,
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ], null, 201);
         } catch (\Exception $e) {
             Log::error('Error en registro general: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al registrar el usuario.',
-            ], 500);
+            return $this->errorResponse('Error al registrar el usuario.', 500);
         }
     }
 
@@ -87,44 +76,40 @@ class AuthController extends Controller
                 'errors' => $validator->errors()->toArray(),
                 'email' => $request->email,
             ]);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
+            return $this->errorResponse('Validation error', 422, $validator->errors());
         }
 
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             Log::warning('Intento de inicio de sesión fallido (General)', ['email' => $request->email]);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid login details',
-            ], 401);
+            return $this->errorResponse('Invalid login details', 401);
         }
 
         if ($user->status !== 'active') {
             Log::warning('Intento de inicio de sesión de usuario no activo', ['user_id' => $user->id, 'email' => $user->email, 'status' => $user->status]);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Tu cuenta no está activa. Por favor, contacta al soporte.',
-            ], 403);
+            return $this->errorResponse('Tu cuenta no está activa. Por favor, contacta al soporte.', 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         Log::info('Inicio de sesión exitoso (General)', ['user_id' => $user->id, 'email' => $user->email]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User logged in successfully',
-            'data' => [
-                'user' => $user->load(['client', 'technician', 'admin']),
-                'role' => $user->getRoleNames()->first() ?? null,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ],
+        $role = $user->getRoleNames()->first() ?? null;
+        
+        if ($role === 'client') {
+            $user->load('client');
+        } elseif ($role === 'technician') {
+            $user->load('technician');
+        } elseif ($role) {
+            $user->load('admin');
+        }
+
+        return $this->successResponse([
+            'user' => $user,
+            'role' => $role,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
         ]);
     }
 
@@ -138,10 +123,7 @@ class AuthController extends Controller
 
         Log::info('Sesión cerrada (General)', ['user_id' => $user->id, 'email' => $user->email]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'User logged out successfully',
-        ]);
+        return $this->successResponse(null);
     }
 
     /**
@@ -186,16 +168,10 @@ class AuthController extends Controller
 
             Log::info('Correo de recuperación enviado', ['email' => $email]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Password reset link sent to your email.',
-            ]);
+            return $this->successResponse(null);
         } catch (\Exception $e) {
             Log::error('Error al enviar correo de recuperación: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to send reset link.',
-            ], 500);
+            return $this->errorResponse('Failed to send reset link.', 500);
         }
     }
 
@@ -225,30 +201,21 @@ class AuthController extends Controller
             ->first();
 
         if (!$resetEntry) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid token or email.',
-            ], 400);
+            return $this->errorResponse('Invalid token or email.', 400);
         }
 
         // El token expira después de cierto tiempo (por ejemplo, 60 minutos)
         $createdAt = \Carbon\Carbon::parse($resetEntry->created_at);
         if ($createdAt->addMinutes(60)->isPast()) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Token has expired.',
-            ], 400);
+            return $this->errorResponse('Token has expired.', 400);
         }
 
         // Actualizar la contraseña del usuario
         $user = User::where('email', '=', $request->email)->first();
 
         if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'User not found.',
-            ], 404);
+            return $this->errorResponse('User not found.', 404);
         }
 
         $user->password = Hash::make($request->password);
@@ -259,10 +226,7 @@ class AuthController extends Controller
 
         Log::info('Contraseña restablecida exitosamente', ['user_id' => $user->id, 'email' => $user->email]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Password has been reset successfully.',
-        ]);
+        return $this->successResponse(null);
     }
 }
 

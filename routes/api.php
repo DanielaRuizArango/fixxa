@@ -79,7 +79,7 @@ Route::prefix('technician')->group(function () {
         Route::get('/cases/{id}', [CaseResponseController::class, 'showCase']);
         Route::post('/responses', [CaseResponseController::class, 'store']);
         Route::put('/responses/{id}', [CaseResponseController::class, 'update']);
-        Route::get('/responses/mine', [CaseResponseController::class, 'myResponses']);
+        Route::get('/my-responses', [CaseResponseController::class, 'myResponses']);
 
         // Calificación promedio del técnico
         Route::get('/my-rating', [App\Http\Controllers\Api\Technician\RatingController::class, 'index']);

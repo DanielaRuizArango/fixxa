@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('admin_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('actor_id')->constrained('users')->onDelete('cascade');
             $table->string('action'); // e.g., 'block_user', 'update_client'
             $table->string('target_type')->nullable(); // e.g., 'User', 'Client'
             $table->unsignedBigInteger('target_id')->nullable();
