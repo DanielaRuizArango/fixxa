@@ -20,7 +20,7 @@ class AuditLogSeeder extends Seeder
 
         $logs = [
             [
-                'admin_id'    => $admin->id,
+                'actor_id'    => $admin->id,
                 'action'      => 'block_user',
                 'target_type' => 'App\\Models\\User',
                 'target_id'   => 5,
@@ -29,7 +29,7 @@ class AuditLogSeeder extends Seeder
                 'created_at'  => now()->subHours(2),
             ],
             [
-                'admin_id'    => $admin->id,
+                'actor_id'    => $admin->id,
                 'action'      => 'approve_certification',
                 'target_type' => 'App\\Models\\TechnicianAsset',
                 'target_id'   => 1,
@@ -38,7 +38,7 @@ class AuditLogSeeder extends Seeder
                 'created_at'  => now()->subHours(5),
             ],
             [
-                'admin_id'    => $admin->id,
+                'actor_id'    => $admin->id,
                 'action'      => 'unblock_user',
                 'target_type' => 'App\\Models\\User',
                 'target_id'   => 6,
@@ -47,7 +47,7 @@ class AuditLogSeeder extends Seeder
                 'created_at'  => now()->subDays(1),
             ],
             [
-                'admin_id'    => $admin->id,
+                'actor_id'    => $admin->id,
                 'action'      => 'delete_case',
                 'target_type' => 'App\\Models\\ServiceCase',
                 'target_id'   => 12,

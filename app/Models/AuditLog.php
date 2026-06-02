@@ -27,9 +27,17 @@ class AuditLog extends Model
     ];
 
     /**
-     * Get the admin user who performed the action.
+     * Get the actor who performed the action.
      */
     public function actor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_id')->withTrashed();
+    }
+
+    /**
+     * Get the admin user who performed the action (legacy alias for actor).
+     */
+    public function admin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_id')->withTrashed();
     }
