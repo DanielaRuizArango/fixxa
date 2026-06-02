@@ -167,3 +167,13 @@ Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
     Route::patch('/{id}/read', [App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
     Route::delete('/{id}', [App\Http\Controllers\Api\NotificationController::class, 'destroy']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Broadcasting
+|--------------------------------------------------------------------------
+*/
+use Illuminate\Support\Facades\Broadcast;
+
+Broadcast::routes(['middleware' => ['api', 'auth:sanctum']]);
+require __DIR__.'/channels.php';
