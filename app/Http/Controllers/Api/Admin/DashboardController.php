@@ -17,8 +17,9 @@ class DashboardController extends Controller
      */
     public function getMetrics()
     {
-        // 1. Casos Activos vs Cerrados
-        $casesCount = ServiceCase::select('status', DB::raw('count(*) as total'))
+        $data = \Illuminate\Support\Facades\Cache::remember('admin_dashboard_metrics', 300, function () {
+            // 1. Casos Activos vs Cerrados
+            $casesCount = ServiceCase::select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->get()
             ->pluck('total', 'status');
@@ -56,9 +57,7 @@ class DashboardController extends Controller
         // 5. Total de servicios completados (histórico)
         $completedServices = ServiceCase::where('status', 'resolved')->count();
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
+            return [
                 'cases' => [
                     'active' => $activeCases,
                     'closed' => $closedCases,
@@ -72,7 +71,12 @@ class DashboardController extends Controller
                 'recent_logs'    => $recentLogs,
                 'completed_services' => $completedServices,
                 'total_users' => User::count(),
-            ]
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data
         ]);
     }
 

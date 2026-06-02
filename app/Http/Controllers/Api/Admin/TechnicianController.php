@@ -22,7 +22,7 @@ class TechnicianController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Technician::with(['user', 'ratings']);
+            $query = Technician::with(['user', 'ratings'])->withAvg('ratings', 'score')->withCount('ratings');
 
             // Búsqueda por nombre, email o número de identificación del usuario asociado
             if ($request->has('search')) {

@@ -57,6 +57,10 @@ class Technician extends Model
      */
     public function getAverageRatingAttribute(): float
     {
+        if (array_key_exists('ratings_avg_score', $this->attributes)) {
+            $avg = $this->attributes['ratings_avg_score'];
+            return $avg !== null ? round((float) $avg, 1) : 0.0;
+        }
         $avg = $this->ratings()->avg('score');
         return $avg !== null ? round($avg, 1) : 0.0;
     }
@@ -66,6 +70,9 @@ class Technician extends Model
      */
     public function getRatingsCountAttribute(): int
     {
+        if (array_key_exists('ratings_count', $this->attributes)) {
+            return (int) $this->attributes['ratings_count'];
+        }
         return $this->ratings()->count();
     }
     /**

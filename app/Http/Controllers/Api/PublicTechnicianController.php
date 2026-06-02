@@ -14,6 +14,8 @@ class PublicTechnicianController extends Controller
     public function show($id)
     {
         $technician = Technician::with(['user', 'ratings.serviceCase.client.user', 'assets'])
+            ->withAvg('ratings', 'score')
+            ->withCount('ratings')
             ->findOrFail($id);
 
         return response()->json([

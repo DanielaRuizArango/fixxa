@@ -158,8 +158,7 @@ class CaseResponseController extends Controller
      */
     public function availableCases(Request $request)
     {
-        $query = ServiceCase::whereIn('status', ['active', 'responded'])
-            ->with(['images', 'client.user', 'responses']);
+        $query = ServiceCase::whereIn('status', ['active', 'responded']);
 
         // Filtro por búsqueda (Título o Descripción)
         if ($request->filled('search')) {
@@ -212,7 +211,10 @@ class CaseResponseController extends Controller
             }
         }
 
-        $cases = $query->paginate(10);
+        $cases = ServiceCase::query()
+            ->fromSub($query, 'service_cases')
+            ->with(['images', 'client.user', 'responses'])
+            ->paginate(10);
 
         return response()->json([
             'status' => 'success',
