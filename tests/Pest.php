@@ -48,3 +48,38 @@ function something()
 {
     // ..
 }
+
+function clientUser(array $attributes = []): \App\Models\User
+{
+    return \App\Models\User::factory()->client()->create($attributes);
+}
+
+function technicianUser(array $attributes = []): \App\Models\User
+{
+    return \App\Models\User::factory()->technician()->create($attributes);
+}
+
+function serviceCaseFor(\App\Models\User $clientUser, array $attributes = []): \App\Models\ServiceCase
+{
+    return \App\Models\ServiceCase::create(array_merge([
+        'client_id' => $clientUser->client->id,
+        'title' => 'Reparar computador',
+        'description' => 'El equipo no enciende correctamente.',
+        'service_type' => 'presential',
+        'city' => 'Bogota',
+        'status' => 'active',
+    ], $attributes));
+}
+
+function caseResponseFor(
+    \App\Models\ServiceCase $serviceCase,
+    \App\Models\User $technicianUser,
+    array $attributes = []
+): \App\Models\CaseResponse {
+    return \App\Models\CaseResponse::create(array_merge([
+        'service_case_id' => $serviceCase->id,
+        'technician_id' => $technicianUser->technician->id,
+        'estimated_cost' => 120000,
+        'questions' => 'Puedo revisarlo hoy en la tarde.',
+    ], $attributes));
+}
