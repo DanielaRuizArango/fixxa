@@ -16,12 +16,12 @@ Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
         return false;
     }
 
-    if ($user->role === 'client') {
-        return $user->client->id === $conversation->client_id;
+    if ($user->hasRole('client')) {
+        return $user->client?->id === $conversation->client_id;
     }
 
-    if ($user->role === 'technician') {
-        return $user->technician->id === $conversation->technician_id;
+    if ($user->hasRole('technician')) {
+        return $user->technician?->id === $conversation->technician_id;
     }
 
     return false;

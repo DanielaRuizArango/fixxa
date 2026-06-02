@@ -190,10 +190,10 @@ class CaseManagementController extends Controller
             ], 403);
         }
 
-        if ($serviceCase->status !== 'pending') {
+        if (!in_array($serviceCase->status, ['active', 'pending', 'responded'])) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Solo puedes resolver casos en estado pendiente.',
+                'message' => 'Solo puedes resolver casos que están activos, pendientes o respondidos.',
             ], 422);
         }
 
