@@ -75,9 +75,15 @@ Para poner en marcha el sistema con todas sus funcionalidades:
 php artisan serve
 ```
 
-2. **Servidor de Sockets (Reverb)**:
+2. **Servidor de Sockets (Reverb)** (en otra terminal; se queda en ejecución y casi no imprime nada hasta que un cliente se conecte):
 ```bash
-php artisan reverb:start
+php artisan reverb:start --debug
+```
+Asegúrate de tener en `.env` **`BROADCAST_CONNECTION=reverb`** (no `log`). Si está en `log`, Laravel escribe los eventos en el log y Reverb no recibe nada aunque el servidor esté arriba.
+
+O levanta API + Reverb + cola + Vite a la vez:
+```bash
+composer run dev
 ```
 
 3. **Compilación de Assets**:
