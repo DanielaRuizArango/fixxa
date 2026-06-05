@@ -124,3 +124,78 @@ test('technician asset upload requires an image', function () {
         ])
         ->assertStatus(422);
 });
+
+test('technician assets endpoints require a technician profile', function () {
+    $technician = technicianRoleWithoutProfile();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson('/api/technician/assets')
+        ->assertNotFound()
+        ->assertJsonPath('message', 'Profile not found');
+
+    Storage::fake('public');
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson('/api/technician/assets', [
+            'type' => 'tool',
+            'description' => 'Herramienta',
+            'image' => UploadedFile::fake()->image('tool.jpg'),
+        ])
+        ->assertNotFound();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->deleteJson('/api/technician/assets/1')
+        ->assertNotFound();
+});
+
+test('technician can upload id document and work assets', function () {
+    Storage::fake('public');
+    $technician = technicianUser();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson('/api/technician/assets', [
+            'type' => 'id_document',
+            'description' => 'Documento de identidad',
+            'image' => UploadedFile::fake()->image('id.jpg'),
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.status', 'pending');
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson('/api/technician/assets', [
+            'type' => 'work',
+            'description' => 'Trabajo realizado',
+            'image' => UploadedFile::fake()->image('work.jpg'),
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.status', 'approved')
+        ->assertJsonPath('message', 'Asset subido exitosamente.');
+});
+
+test('technician can delete their own asset', function () {
+    Storage::fake('public');
+    Storage::disk('public')->put('technicians/assets/own-delete.jpg', 'image-data');
+
+    $technician = technicianUser();
+    $asset = TechnicianAsset::create([
+        'technician_id' => $technician->technician->id,
+        'type' => 'tool',
+        'image_path' => 'technicians/assets/own-delete.jpg',
+        'description' => 'Own tool',
+        'status' => 'approved',
+    ]);
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->deleteJson("/api/technician/assets/{$asset->id}")
+        ->assertOk()
+        ->assertJsonPath('message', 'Asset deleted successfully');
+
+    Storage::disk('public')->assertMissing('technicians/assets/own-delete.jpg');
+    $this->assertDatabaseMissing('technician_assets', ['id' => $asset->id]);
+});

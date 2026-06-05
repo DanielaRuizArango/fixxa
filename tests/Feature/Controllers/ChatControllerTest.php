@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\ChatController;
 use App\Models\Conversation;
 use App\Models\Message;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 
 test('client can start a conversation with a technician for a case', function () {
@@ -314,4 +317,83 @@ test('sending a message notifies the recipient', function () {
 test('guest cannot access chat endpoints', function () {
     $this->getJson('/api/chat')->assertUnauthorized();
     $this->postJson('/api/chat/start', [])->assertUnauthorized();
+});
+
+test('starting a conversation requires valid input', function () {
+    $client = clientUser();
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson('/api/chat/start', [
+            'service_case_id' => 999999,
+            'technician_id' => 999999,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('status', 'error');
+});
+
+test('start conversation rejects users without client or technician role', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client);
+    $admin = adminUser();
+
+    $request = Request::create('/api/chat/start', 'POST', [
+        'service_case_id' => $case->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+    Auth::setUser($admin);
+
+    $response = app(ChatController::class)->startConversation($request);
+
+    expect($response->getStatusCode())->toBe(403);
+    expect($response->getData(true)['message'])->toBe('Unauthorized role.');
+});
+
+test('technician can send a message that notifies the client', function () {
+    Event::fake([\App\Events\MessageSent::class]);
+
+    $client = clientUser();
+    $technician = technicianUser();
+    $conversation = Conversation::create([
+        'service_case_id' => serviceCaseFor($client)->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson("/api/chat/{$conversation->id}/send", [
+            'message' => 'Llego en 30 minutos.',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.message', 'Llego en 30 minutos.');
+
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $client->id,
+        'notifiable_type' => \App\Models\User::class,
+    ]);
+});
+
+test('send message continues when notification delivery fails', function () {
+    Event::fake([\App\Events\MessageSent::class]);
+    Event::listen(\Illuminate\Notifications\Events\NotificationSending::class, function () {
+        throw new \Exception('Notification failed');
+    });
+
+    $client = clientUser();
+    $technician = technicianUser();
+    $conversation = Conversation::create([
+        'service_case_id' => serviceCaseFor($client)->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson("/api/chat/{$conversation->id}/send", [
+            'message' => 'Mensaje con fallo de notificacion',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('status', 'success');
 });

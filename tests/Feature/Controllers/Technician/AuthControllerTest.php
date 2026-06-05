@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Technician;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -158,4 +159,66 @@ it('logs out a technician successfully', function () {
             'status' => 'success',
             'message' => 'Sesión cerrada exitosamente.',
         ]);
+});
+
+it('registers a technician without image', function () {
+    $response = $this->postJson('/api/technician/register', [
+        'name' => 'Tecnico Sin Foto',
+        'email' => 'tech.sin.foto@example.com',
+        'phone' => '1234567890',
+        'address' => '123 Tech Street',
+        'city' => 'Tech City',
+        'type_id' => 'CC',
+        'id_number' => '1020304051',
+        'experience' => '3 years',
+        'title' => 'Technician',
+        'password' => 'password123',
+    ]);
+
+    $response->assertCreated()->assertJsonPath('status', 'success');
+
+    $user = User::where('email', 'tech.sin.foto@example.com')->first();
+    expect($user->image)->toBeNull();
+});
+
+it('handles internal errors during technician registration', function () {
+    Event::listen('eloquent.creating: '.User::class, function () {
+        Event::forget('eloquent.creating: '.User::class);
+        throw new \Exception('Registration failed');
+    });
+
+    $this->postJson('/api/technician/register', [
+        'name' => 'Tecnico Fallido',
+        'email' => 'tech.fail@example.com',
+        'phone' => '1234567890',
+        'address' => '123 Tech Street',
+        'city' => 'Tech City',
+        'type_id' => 'CC',
+        'id_number' => '1020304052',
+        'experience' => '3 years',
+        'title' => 'Technician',
+        'password' => 'password123',
+    ])
+        ->assertStatus(500)
+        ->assertJsonPath('message', 'Error al registrar el técnico.');
+});
+
+it('fails to login with unknown email', function () {
+    $this->postJson('/api/technician/login', [
+        'email' => 'unknown@example.com',
+        'password' => 'password123',
+    ])
+        ->assertStatus(401)
+        ->assertJsonPath('message', 'Credenciales incorrectas.');
+});
+
+it('fails to login when user is not a technician', function () {
+    $client = clientUser(['password' => Hash::make('password123')]);
+
+    $this->postJson('/api/technician/login', [
+        'email' => $client->email,
+        'password' => 'password123',
+    ])
+        ->assertStatus(401)
+        ->assertJsonPath('message', 'Credenciales incorrectas.');
 });

@@ -97,6 +97,38 @@ test('admin can reject an id document with a reason', function () {
         ->assertJsonPath('data.rejection_reason', 'Imagen no legible.');
 });
 
+test('technician cannot manage certifications or id documents', function () {
+    $technician = technicianUser();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson('/api/admin/certifications')
+        ->assertForbidden();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson('/api/admin/id-documents')
+        ->assertForbidden();
+});
+
+test('rejecting id document requires a reason', function () {
+    $admin = adminUser();
+    $technician = technicianUser();
+
+    $document = TechnicianAsset::create([
+        'technician_id' => $technician->technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id-invalid.png',
+        'description' => 'Cedula invalida',
+        'status' => 'pending',
+    ]);
+
+    $this
+        ->actingAs($admin, 'sanctum')
+        ->patchJson("/api/admin/id-documents/{$document->id}/reject", [])
+        ->assertStatus(422);
+});
+
 test('rejecting certification requires a reason', function () {
     $admin = adminUser();
     $technician = technicianUser();

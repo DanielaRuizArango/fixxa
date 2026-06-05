@@ -58,6 +58,56 @@ test('guest cannot access dashboard endpoints', function () {
     $this->getJson('/api/admin/logs')->assertUnauthorized();
 });
 
+test('admin can filter audit logs by action and date range', function () {
+    $admin = adminUser();
+    $client = clientUser();
+
+    $log = AuditLog::create([
+        'actor_id' => $client->id,
+        'action' => 'block_client',
+        'target_type' => 'User',
+        'target_id' => $client->id,
+        'description' => 'Bloqueo de prueba',
+        'created_at' => now()->subDays(2),
+    ]);
+
+    $this
+        ->actingAs($admin, 'sanctum')
+        ->getJson('/api/admin/logs?action=block_client&date_from='.now()->subDays(3)->toDateString().'&date_to='.now()->toDateString())
+        ->assertOk()
+        ->assertJsonPath('data.data.0.id', $log->id);
+});
+
+test('regular admin metrics exclude other admin audit logs', function () {
+    $admin = adminUser();
+    $client = clientUser();
+
+    $clientLog = AuditLog::create([
+        'actor_id' => $client->id,
+        'action' => 'create_case',
+        'target_type' => 'App\\Models\\ServiceCase',
+        'target_id' => 1,
+        'description' => 'Cliente creo un caso.',
+    ]);
+
+    $adminLog = AuditLog::create([
+        'actor_id' => $admin->id,
+        'action' => 'admin_action',
+        'target_type' => 'User',
+        'target_id' => 1,
+        'description' => 'Accion interna de admin.',
+    ]);
+
+    $response = $this
+        ->actingAs($admin, 'sanctum')
+        ->getJson('/api/admin/dashboard/metrics');
+
+    $logIds = collect($response->json('data.recent_logs'))->pluck('id');
+
+    expect($logIds)->toContain($clientLog->id);
+    expect($logIds)->not->toContain($adminLog->id);
+});
+
 test('moderator can access dashboard and client management', function () {
     $moderator = moderatorUser();
     clientUser();

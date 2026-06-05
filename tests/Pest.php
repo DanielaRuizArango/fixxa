@@ -61,9 +61,25 @@ function clientUser(array $attributes = []): \App\Models\User
     return \App\Models\User::factory()->client()->create($attributes);
 }
 
+function clientRoleWithoutProfile(array $attributes = []): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create($attributes);
+    $user->assignRole('client');
+
+    return $user;
+}
+
 function technicianUser(array $attributes = []): \App\Models\User
 {
     return \App\Models\User::factory()->technician()->create($attributes);
+}
+
+function technicianRoleWithoutProfile(array $attributes = []): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create($attributes);
+    $user->assignRole('technician');
+
+    return $user;
 }
 
 function serviceCaseFor(\App\Models\User $clientUser, array $attributes = []): \App\Models\ServiceCase

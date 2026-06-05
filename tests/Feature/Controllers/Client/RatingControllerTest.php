@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Rating;
+use Illuminate\Support\Facades\Event;
 
 test('client can rate a resolved case with accepted technician', function () {
     $client = clientUser();
@@ -82,6 +83,96 @@ test('client cannot rate the same case twice', function () {
         ->assertJsonPath('status', 'error');
 
     $this->assertDatabaseCount('service_ratings', 1);
+});
+
+test('ratings endpoints require a client profile', function () {
+    $user = clientRoleWithoutProfile();
+
+    $this->actingAs($user, 'sanctum')->getJson('/api/client/ratings')
+        ->assertForbidden()
+        ->assertJsonPath('message', 'No tienes un perfil de cliente asociado.');
+});
+
+test('store rating requires a client profile', function () {
+    $user = clientRoleWithoutProfile();
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client, [
+        'status' => 'resolved',
+        'accepted_technician_id' => $technician->technician->id,
+    ]);
+
+    $this->actingAs($user, 'sanctum')->postJson('/api/client/ratings', [
+        'service_case_id' => $case->id,
+        'score' => 5,
+    ])
+        ->assertForbidden()
+        ->assertJsonPath('message', 'No tienes un perfil de cliente asociado.');
+});
+
+test('client cannot rate a case that does not belong to them', function () {
+    $client = clientUser();
+    $otherClient = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($otherClient, [
+        'status' => 'resolved',
+        'accepted_technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson('/api/client/ratings', [
+            'service_case_id' => $case->id,
+            'score' => 4,
+        ])
+        ->assertForbidden()
+        ->assertJsonPath('message', 'El caso no existe o no te pertenece.');
+});
+
+test('client cannot rate a resolved case without assigned technician', function () {
+    $client = clientUser();
+    $case = serviceCaseFor($client, [
+        'status' => 'resolved',
+        'accepted_technician_id' => null,
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson('/api/client/ratings', [
+            'service_case_id' => $case->id,
+            'score' => 5,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'El caso no tiene un técnico asignado.');
+});
+
+test('rating submission continues when technician notification fails', function () {
+    Event::listen(\Illuminate\Notifications\Events\NotificationSending::class, function () {
+        throw new \Exception('Notification failed');
+    });
+
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client, [
+        'status' => 'resolved',
+        'accepted_technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson('/api/client/ratings', [
+            'service_case_id' => $case->id,
+            'score' => 5,
+            'comment' => 'Buen trabajo.',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('status', 'success');
+
+    $this->assertDatabaseHas('service_ratings', [
+        'service_case_id' => $case->id,
+        'client_id' => $client->client->id,
+        'score' => 5,
+    ]);
 });
 
 test('ratings index only includes authenticated clients ratings', function () {

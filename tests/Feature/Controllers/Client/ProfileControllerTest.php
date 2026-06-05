@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
 test('client can view their profile', function () {
@@ -46,6 +47,25 @@ test('client can update their profile', function () {
 
 test('guest cannot access client profile', function () {
     $this->getJson('/api/client/me')->assertUnauthorized();
+});
+
+test('client can update profile password', function () {
+    $client = clientUser(['password' => Hash::make('old-password')]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson('/api/client/profile', [
+            'name' => $client->name,
+            'email' => $client->email,
+            'phone' => $client->phone,
+            'address' => $client->address,
+            'city' => $client->city,
+            'password' => 'new-secure-password',
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'success');
+
+    expect(Hash::check('new-secure-password', $client->fresh()->password))->toBeTrue();
 });
 
 test('technician cannot access client profile routes', function () {

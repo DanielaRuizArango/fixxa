@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Models\Client;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -134,6 +135,28 @@ it('fails to login when client is inactive', function () {
             'status' => 'error',
             'message' => 'Tu cuenta no está activa. Por favor, contacta al soporte.',
         ]);
+});
+
+it('handles internal errors during client registration', function () {
+    Storage::fake('public');
+
+    Event::listen('eloquent.creating: '.User::class, function () {
+        throw new \Exception('Registration failed');
+    });
+
+    $this->postJson('/api/client/register', [
+        'name' => 'Jane Client',
+        'email' => 'error.client@example.com',
+        'phone' => '0987654321',
+        'address' => '456 Client Avenue',
+        'city' => 'Client City',
+        'type_id' => 'CC',
+        'id_number' => '5040302099',
+        'password' => 'password123',
+    ])
+        ->assertStatus(500)
+        ->assertJsonPath('status', 'error')
+        ->assertJsonPath('message', 'Error al registrar el cliente.');
 });
 
 it('logs out a client successfully', function () {
