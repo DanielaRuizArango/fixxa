@@ -98,3 +98,38 @@ test('client can resolve their own active case', function () {
         'status' => 'resolved',
     ]);
 });
+
+test('client can cancel an active case', function () {
+    $client = clientUser();
+    $case = serviceCaseFor($client, ['status' => 'active']);
+
+    $response = $this
+        ->actingAs($client, 'sanctum')
+        ->patchJson("/api/client/cases/{$case->id}/cancel");
+
+    $response
+        ->assertOk()
+        ->assertJsonPath('status', 'success')
+        ->assertJsonPath('message', 'Caso cancelado.');
+
+    $this->assertDatabaseHas('service_cases', [
+        'id' => $case->id,
+        'status' => 'cancelled',
+    ]);
+});
+
+test('client cannot cancel a resolved case', function () {
+    $client = clientUser();
+    $case = serviceCaseFor($client, ['status' => 'resolved']);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->patchJson("/api/client/cases/{$case->id}/cancel")
+        ->assertStatus(422)
+        ->assertJsonPath('status', 'error');
+
+    $this->assertDatabaseHas('service_cases', [
+        'id' => $case->id,
+        'status' => 'resolved',
+    ]);
+});

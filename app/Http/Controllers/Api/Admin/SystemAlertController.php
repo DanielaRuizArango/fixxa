@@ -39,9 +39,9 @@ class SystemAlertController extends Controller
             $poorTechnicians = Technician::with(['user'])
                 ->withCount('ratings')
                 ->withAvg('ratings', 'score')
-                ->having('ratings_count', '>=', 3)
-                ->having('ratings_avg_score', '<', 3.0)
                 ->get()
+                ->filter(fn ($tech) => $tech->ratings_count >= 3 && ($tech->ratings_avg_score ?? 0) < 3.0)
+                ->values()
                 ->map(function ($tech) {
                     return [
                         'id' => $tech->id,

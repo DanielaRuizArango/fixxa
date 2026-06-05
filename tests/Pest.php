@@ -18,6 +18,13 @@ pest()->extend(Tests\TestCase::class)
     })
     ->in('Feature');
 
+pest()->extend(Tests\TestCase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        $this->seed(Database\Seeders\RolePermissionSeeder::class);
+    })
+    ->in('Unit');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
@@ -82,4 +89,27 @@ function caseResponseFor(
         'estimated_cost' => 120000,
         'questions' => 'Puedo revisarlo hoy en la tarde.',
     ], $attributes));
+}
+
+function adminUser(array $attributes = []): \App\Models\User
+{
+    return \App\Models\User::factory()->admin()->create($attributes);
+}
+
+function superAdminUser(array $attributes = []): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create($attributes);
+    $user->assignRole('super_admin');
+    \App\Models\Admin::create(['user_id' => $user->id]);
+
+    return $user;
+}
+
+function moderatorUser(array $attributes = []): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create($attributes);
+    $user->assignRole('moderator');
+    \App\Models\Admin::create(['user_id' => $user->id]);
+
+    return $user;
 }

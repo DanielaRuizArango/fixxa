@@ -154,3 +154,164 @@ test('broadcast auth denies users outside the private chat channel', function ()
 
     $response->assertForbidden();
 });
+
+test('client can list their conversations', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client);
+    Conversation::create([
+        'service_case_id' => $case->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $response = $this
+        ->actingAs($client, 'sanctum')
+        ->getJson('/api/chat');
+
+    $response
+        ->assertOk()
+        ->assertJsonPath('status', 'success')
+        ->assertJsonCount(1, 'data')
+        ->assertJsonStructure(['meta' => ['total', 'current_page']]);
+});
+
+test('technician can list their conversations', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client);
+    Conversation::create([
+        'service_case_id' => $case->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson('/api/chat')
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+});
+
+test('client must provide technician id to start a conversation', function () {
+    $client = clientUser();
+    $case = serviceCaseFor($client);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson('/api/chat/start', [
+            'service_case_id' => $case->id,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('status', 'error');
+});
+
+test('starting an existing conversation does not duplicate it', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client, [
+        'status' => 'pending',
+        'accepted_technician_id' => $technician->technician->id,
+    ]);
+
+    $this->actingAs($client, 'sanctum')->postJson('/api/chat/start', [
+        'service_case_id' => $case->id,
+        'technician_id' => $technician->technician->id,
+    ])->assertOk();
+
+    $this->actingAs($client, 'sanctum')->postJson('/api/chat/start', [
+        'service_case_id' => $case->id,
+        'technician_id' => $technician->technician->id,
+    ])->assertOk();
+
+    $this->assertDatabaseCount('conversations', 1);
+});
+
+test('technician can open an existing conversation started by the client', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client, [
+        'status' => 'pending',
+        'accepted_technician_id' => $technician->technician->id,
+    ]);
+
+    $this->actingAs($client, 'sanctum')->postJson('/api/chat/start', [
+        'service_case_id' => $case->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson('/api/chat/start', [
+            'service_case_id' => $case->id,
+        ])
+        ->assertOk()
+        ->assertJsonPath('status', 'success');
+});
+
+test('send message requires a message body', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $conversation = Conversation::create([
+        'service_case_id' => serviceCaseFor($client)->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson("/api/chat/{$conversation->id}/send", [])
+        ->assertStatus(422)
+        ->assertJsonPath('status', 'error');
+});
+
+test('non participant cannot send messages', function () {
+    $client = clientUser();
+    $otherClient = clientUser();
+    $technician = technicianUser();
+    $conversation = Conversation::create([
+        'service_case_id' => serviceCaseFor($client)->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($otherClient, 'sanctum')
+        ->postJson("/api/chat/{$conversation->id}/send", [
+            'message' => 'Mensaje no autorizado',
+        ])
+        ->assertForbidden();
+});
+
+test('sending a message notifies the recipient', function () {
+    Event::fake([\App\Events\MessageSent::class]);
+
+    $client = clientUser();
+    $technician = technicianUser();
+    $conversation = Conversation::create([
+        'service_case_id' => serviceCaseFor($client)->id,
+        'client_id' => $client->client->id,
+        'technician_id' => $technician->technician->id,
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->postJson("/api/chat/{$conversation->id}/send", [
+            'message' => 'Cuando puedes pasar?',
+        ])
+        ->assertCreated();
+
+    $this->assertDatabaseHas('notifications', [
+        'notifiable_id' => $technician->id,
+        'notifiable_type' => \App\Models\User::class,
+    ]);
+
+    $notification = $technician->fresh()->notifications->first();
+    expect($notification->data['type'])->toBe('new_message');
+    expect($notification->data['sender_id'])->toBe($client->id);
+});
+
+test('guest cannot access chat endpoints', function () {
+    $this->getJson('/api/chat')->assertUnauthorized();
+    $this->postJson('/api/chat/start', [])->assertUnauthorized();
+});

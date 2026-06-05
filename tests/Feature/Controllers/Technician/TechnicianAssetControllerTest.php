@@ -96,3 +96,31 @@ test('technician cannot delete another technicians asset', function () {
     $response->assertNotFound();
     $this->assertDatabaseHas('technician_assets', ['id' => $asset->id]);
 });
+
+test('technician asset upload rejects invalid type', function () {
+    Storage::fake('public');
+    $technician = technicianUser();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson('/api/technician/assets', [
+            'type' => 'invalid_type',
+            'description' => 'Documento',
+            'image' => UploadedFile::fake()->image('doc.jpg'),
+        ])
+        ->assertStatus(422);
+
+    $this->assertDatabaseCount('technician_assets', 0);
+});
+
+test('technician asset upload requires an image', function () {
+    $technician = technicianUser();
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->postJson('/api/technician/assets', [
+            'type' => 'tool',
+            'description' => 'Sin imagen',
+        ])
+        ->assertStatus(422);
+});

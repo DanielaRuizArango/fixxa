@@ -114,3 +114,50 @@ test('my responses endpoint returns only authenticated technicians proposals', f
         ->assertJsonCount(1, 'data.data')
         ->assertJsonPath('data.data.0.id', $ownProposal->id);
 });
+
+test('technician can list available cases', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $activeCase = serviceCaseFor($client, ['title' => 'Caso disponible', 'status' => 'active']);
+    $resolvedCase = serviceCaseFor($client, ['title' => 'Caso resuelto', 'status' => 'resolved']);
+
+    $response = $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson('/api/technician/cases');
+
+    $response
+        ->assertOk()
+        ->assertJsonPath('status', 'success')
+        ->assertJsonPath('data.data.0.id', $activeCase->id);
+
+    $ids = collect($response->json('data.data'))->pluck('id');
+    expect($ids)->not->toContain($resolvedCase->id);
+});
+
+test('technician can filter available cases by search and service type', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    serviceCaseFor($client, ['title' => 'Instalar aire', 'service_type' => 'remote', 'status' => 'active']);
+    serviceCaseFor($client, ['title' => 'Reparar puerta', 'service_type' => 'presential', 'status' => 'active']);
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson('/api/technician/cases?search=aire&service_type=remote')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.data')
+        ->assertJsonPath('data.data.0.title', 'Instalar aire');
+});
+
+test('technician can view a case detail', function () {
+    $client = clientUser();
+    $technician = technicianUser();
+    $case = serviceCaseFor($client, ['status' => 'active']);
+
+    $this
+        ->actingAs($technician, 'sanctum')
+        ->getJson("/api/technician/cases/{$case->id}")
+        ->assertOk()
+        ->assertJsonPath('status', 'success')
+        ->assertJsonPath('data.id', $case->id)
+        ->assertJsonPath('data.title', $case->title);
+});
