@@ -5,11 +5,35 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TechnicianAsset;
 use App\Notifications\CertificationReviewed;
+use App\Support\RejectionReasons;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class CertificationController extends Controller
 {
+    /**
+     * List predefined rejection reasons for admin review forms.
+     */
+    public function rejectionReasons(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'type' => 'required|in:certification,id_document',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $reasons = $request->type === 'certification'
+            ? RejectionReasons::forCertification()
+            : RejectionReasons::forIdDocument();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $reasons,
+        ]);
+    }
+
     /**
      * List all certification assets, filterable by status, paginated.
      */

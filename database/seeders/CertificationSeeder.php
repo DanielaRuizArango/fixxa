@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\TechnicianAsset;
 use App\Models\User;
+use App\Support\RejectionReasons;
 use Illuminate\Database\Seeder;
 
 class CertificationSeeder extends Seeder
@@ -37,22 +38,6 @@ class CertificationSeeder extends Seeder
         'Curso de Instalación de Paneles Solares Fotovoltaicos',
         'Certificación en Cámaras de Seguridad y CCTV',
         'Técnico en Automatización del Hogar (Domótica)',
-    ];
-
-    private array $rejectionReasons = [
-        'El documento no es legible. Por favor sube una imagen con mayor resolución.',
-        'La certificación está vencida. Sube un certificado vigente.',
-        'La entidad emisora no está registrada en nuestro sistema de validación.',
-        'El nombre en el certificado no coincide con el nombre del perfil.',
-        'La imagen no corresponde a un certificado oficial reconocido.',
-    ];
-
-    private array $idRejectionReasons = [
-        'La cédula no es legible. Por favor sube una imagen con mayor resolución.',
-        'El documento está vencido o deteriorado.',
-        'Los datos de la cédula no coinciden con la información del perfil.',
-        'La imagen no corresponde a una cédula de ciudadanía válida.',
-        'La cédula presentada es una fotocopia no aceptada. Se requiere el documento original.',
     ];
 
     public function run(): void
@@ -92,7 +77,8 @@ class CertificationSeeder extends Seeder
                     $data['reviewed_at'] = now()->subDays(rand(1, 30));
 
                     if ($status === 'rejected') {
-                        $data['rejection_reason'] = $this->rejectionReasons[array_rand($this->rejectionReasons)];
+                        $reasons = RejectionReasons::forCertification();
+                        $data['rejection_reason'] = $reasons[array_rand($reasons)];
                     }
                 }
 
@@ -116,7 +102,8 @@ class CertificationSeeder extends Seeder
                 $idData['reviewed_at'] = now()->subDays(rand(1, 30));
 
                 if ($idStatus === 'rejected') {
-                    $idData['rejection_reason'] = $this->idRejectionReasons[array_rand($this->idRejectionReasons)];
+                    $reasons = RejectionReasons::forIdDocument();
+                    $idData['rejection_reason'] = $reasons[array_rand($reasons)];
                 }
             }
 

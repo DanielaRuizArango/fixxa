@@ -135,6 +135,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:super_admin|admin|mode
         Route::get('alerts', [\App\Http\Controllers\Api\Admin\SystemAlertController::class, 'index']);
 
         // Aprobación de Certificaciones de Técnicos
+        Route::get('rejection-reasons', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'rejectionReasons']);
         Route::get('certifications', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'index']);
         Route::get('certifications/{id}', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'show']);
         Route::patch('certifications/{id}/approve', [\App\Http\Controllers\Api\Admin\CertificationController::class, 'approve']);

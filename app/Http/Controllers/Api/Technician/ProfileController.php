@@ -15,7 +15,7 @@ class ProfileController extends Controller
      */
     public function show(Request $request)
     {
-        $user = $request->user()->load('technician');
+        $user = $request->user()->load(['technician.assets']);
 
         return response()->json([
             'status' => 'success',

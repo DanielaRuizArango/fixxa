@@ -129,6 +129,47 @@ test('rejecting id document requires a reason', function () {
         ->assertStatus(422);
 });
 
+test('admin can fetch predefined rejection reasons', function () {
+    $admin = adminUser();
+
+    $this
+        ->actingAs($admin, 'sanctum')
+        ->getJson('/api/admin/rejection-reasons?type=certification')
+        ->assertOk()
+        ->assertJsonPath('status', 'success')
+        ->assertJsonStructure(['data' => []])
+        ->assertJsonFragment(['El documento no es legible. Por favor sube una imagen con mayor resolución.']);
+
+    $this
+        ->actingAs($admin, 'sanctum')
+        ->getJson('/api/admin/rejection-reasons?type=id_document')
+        ->assertOk()
+        ->assertJsonFragment(['La cédula no es legible. Por favor sube una imagen con mayor resolución.']);
+});
+
+test('admin can reject with composed rejection reason', function () {
+    $admin = adminUser();
+    $technician = technicianUser();
+
+    $certification = TechnicianAsset::create([
+        'technician_id' => $technician->technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert-compose.png',
+        'description' => 'Certificado',
+        'status' => 'pending',
+    ]);
+
+    $composedReason = 'El documento no es legible. Por favor sube una imagen con mayor resolución. Notas adicionales: Esquina superior borrosa.';
+
+    $this
+        ->actingAs($admin, 'sanctum')
+        ->patchJson("/api/admin/certifications/{$certification->id}/reject", [
+            'rejection_reason' => $composedReason,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.rejection_reason', $composedReason);
+});
+
 test('rejecting certification requires a reason', function () {
     $admin = adminUser();
     $technician = technicianUser();

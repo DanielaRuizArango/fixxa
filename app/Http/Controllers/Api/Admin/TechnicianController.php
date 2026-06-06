@@ -22,7 +22,11 @@ class TechnicianController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Technician::with(['user', 'ratings'])->withAvg('ratings', 'score')->withCount('ratings');
+            $query = Technician::with([
+                'user',
+                'ratings',
+                'assets' => fn ($q) => $q->whereIn('type', ['id_document', 'certification']),
+            ])->withAvg('ratings', 'score')->withCount('ratings');
 
             // Búsqueda por nombre, email o número de identificación del usuario asociado
             if ($request->has('search')) {
@@ -73,7 +77,7 @@ class TechnicianController extends Controller
                 'user',
                 'ratings.client.user',
                 'caseResponses.serviceCase',
-                'assets'
+                'assets' => fn ($q) => $q->whereIn('type', ['id_document', 'certification']),
             ])->findOrFail($id);
             
             return response()->json([

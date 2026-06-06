@@ -85,3 +85,73 @@ test('returns 404 for non existent technician profile', function () {
         ->getJson('/api/technicians/99999/profile')
         ->assertNotFound();
 });
+
+test('public profile includes is verified and hides id documents', function () {
+    $client = clientUser();
+    $technicianUser = technicianUser();
+    $technician = $technicianUser->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.png',
+        'description' => 'Cedula',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert.png',
+        'description' => 'Certificado',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'tool',
+        'image_path' => 'technicians/assets/tool.png',
+        'description' => 'Herramienta',
+        'status' => 'approved',
+    ]);
+
+    $response = $this
+        ->actingAs($client, 'sanctum')
+        ->getJson("/api/technicians/{$technician->id}/profile");
+
+    $response
+        ->assertOk()
+        ->assertJsonPath('data.is_verified', true)
+        ->assertJsonCount(2, 'data.assets');
+
+    $assetTypes = collect($response->json('data.assets'))->pluck('type')->all();
+    expect($assetTypes)->not->toContain('id_document');
+    expect($assetTypes)->toContain('certification');
+    expect($assetTypes)->toContain('tool');
+});
+
+test('public profile is not verified when certifications are pending', function () {
+    $client = clientUser();
+    $technician = technicianUser()->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.png',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert.png',
+        'status' => 'pending',
+    ]);
+
+    $this
+        ->actingAs($client, 'sanctum')
+        ->getJson("/api/technicians/{$technician->id}/profile")
+        ->assertOk()
+        ->assertJsonPath('data.is_verified', false)
+        ->assertJsonCount(0, 'data.assets');
+});

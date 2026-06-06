@@ -26,6 +26,7 @@ class Technician extends Model
     protected $appends = [
         'average_rating',
         'ratings_count',
+        'is_verified',
     ];
 
     /**
@@ -81,5 +82,44 @@ class Technician extends Model
     public function assets(): HasMany
     {
         return $this->hasMany(TechnicianAsset::class);
+    }
+
+    /**
+     * Whether the technician is fully verified (Option A):
+     * approved id_document + at least one certification + all certifications approved.
+     */
+    public function getIsVerifiedAttribute(): bool
+    {
+        if ($this->relationLoaded('assets')) {
+            $assets = $this->assets;
+
+            $hasApprovedId = $assets
+                ->where('type', 'id_document')
+                ->where('status', 'approved')
+                ->isNotEmpty();
+
+            $certifications = $assets->where('type', 'certification');
+
+            return $hasApprovedId
+                && $certifications->isNotEmpty()
+                && $certifications->every(fn ($asset) => $asset->status === 'approved');
+        }
+
+        $hasApprovedId = $this->assets()
+            ->idDocuments()
+            ->where('status', 'approved')
+            ->exists();
+
+        if (! $hasApprovedId) {
+            return false;
+        }
+
+        $certQuery = $this->assets()->certifications();
+
+        if (! $certQuery->exists()) {
+            return false;
+        }
+
+        return ! $certQuery->where('status', '!=', 'approved')->exists();
     }
 }

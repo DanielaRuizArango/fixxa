@@ -18,6 +18,11 @@ class PublicTechnicianController extends Controller
             ->withCount('ratings')
             ->findOrFail($id);
 
+        $publicAssets = $technician->assets
+            ->where('status', 'approved')
+            ->whereIn('type', ['certification', 'tool', 'work'])
+            ->values();
+
         return response()->json([
             'status' => 'success',
             'data'   => [
@@ -31,8 +36,9 @@ class PublicTechnicianController extends Controller
                 'title' => $technician->title,
                 'working_hours' => $technician->working_hours,
                 'average_rating' => $technician->average_rating,
+                'is_verified' => $technician->is_verified,
                 'ratings' => $technician->ratings,
-                'assets' => $technician->assets,
+                'assets' => $publicAssets,
             ],
         ]);
     }

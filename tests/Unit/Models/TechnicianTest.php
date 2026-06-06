@@ -66,3 +66,111 @@ test('technician casts is available as boolean', function () {
 
     expect($technician->fresh()->is_available)->toBeBool()->toBeTrue();
 });
+
+test('technician is not verified without documents', function () {
+    $technician = technicianUser()->technician;
+
+    expect($technician->fresh()->is_verified)->toBeFalse();
+});
+
+test('technician is not verified with only approved id document', function () {
+    $technician = technicianUser()->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.jpg',
+        'status' => 'approved',
+    ]);
+
+    expect($technician->fresh()->is_verified)->toBeFalse();
+});
+
+test('technician is not verified with approved id and pending certification', function () {
+    $technician = technicianUser()->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.jpg',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert.jpg',
+        'status' => 'pending',
+    ]);
+
+    expect($technician->fresh()->is_verified)->toBeFalse();
+});
+
+test('technician is not verified with approved id and rejected certification', function () {
+    $technician = technicianUser()->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.jpg',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert.jpg',
+        'status' => 'rejected',
+        'rejection_reason' => 'Vencido.',
+    ]);
+
+    expect($technician->fresh()->is_verified)->toBeFalse();
+});
+
+test('technician is verified with approved id and all certifications approved', function () {
+    $technician = technicianUser()->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.jpg',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert1.jpg',
+        'status' => 'approved',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert2.jpg',
+        'status' => 'approved',
+    ]);
+
+    expect($technician->fresh()->is_verified)->toBeTrue();
+});
+
+test('technician is not verified with rejected id even if certifications are approved', function () {
+    $technician = technicianUser()->technician;
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'id_document',
+        'image_path' => 'technicians/assets/id.jpg',
+        'status' => 'rejected',
+        'rejection_reason' => 'Ilegible.',
+    ]);
+
+    TechnicianAsset::create([
+        'technician_id' => $technician->id,
+        'type' => 'certification',
+        'image_path' => 'technicians/assets/cert.jpg',
+        'status' => 'approved',
+    ]);
+
+    expect($technician->fresh()->is_verified)->toBeFalse();
+});
