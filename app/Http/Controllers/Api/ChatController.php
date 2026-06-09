@@ -156,6 +156,8 @@ class ChatController extends Controller
             $recipient = $conversation->client->user;
         }
 
+        broadcast(new \App\Events\MessageSent($message))->toOthers();
+
         if ($recipient) {
             try {
                 $recipient->notify(new \App\Notifications\MessageReceived($message, $user));
@@ -163,8 +165,6 @@ class ChatController extends Controller
                 Log::error('Error enviando notificación de mensaje: ' . $e->getMessage());
             }
         }
-
-        broadcast(new \App\Events\MessageSent($message))->toOthers();
 
         return $this->successResponse($message, null, 201);
     }

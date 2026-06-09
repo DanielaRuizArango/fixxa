@@ -180,4 +180,3 @@ Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::routes(['middleware' => ['api', 'auth:sanctum']]);
-require __DIR__.'/channels.php';
